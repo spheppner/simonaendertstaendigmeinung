@@ -110,9 +110,9 @@ def main():
     subj = feed_list_from_file(subj, "subjectives.txt")
     for _ in range(10):
         result = ""
-        random.choice.shuffle(adj)
+        random.shuffle(adj)
         for a in range(megaroll("1D2")):
-            result += adj[a]
+            result += adj[a] + " "
         result += random.choice(subj)
         print(result)
                 
