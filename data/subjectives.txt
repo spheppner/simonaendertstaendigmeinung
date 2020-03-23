@@ -1,0 +1,10 @@
+sword
+hammer
+ham
+baguette
+pizza
+sandwich
+scepter
+loop
+ring
+amulet
