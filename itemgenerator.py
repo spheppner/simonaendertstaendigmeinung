@@ -96,7 +96,7 @@ def feed_list_from_file(listvar, filename):
     """takes filelname and search for this filename in the 'data' folder.
     add each line of this file to the list 'listvar' and returns listvar"""
     datafilename = os.path.join("data", filename)
-    with with open(datafilename) as f:
+    with open(datafilename) as f:
         lines = f.readlines()
     for line in lines:
         listvar.append(line.strip())
@@ -108,10 +108,14 @@ def main():
     subj = []
     adj = feed_list_from_file(adj, "adjectives.txt")
     subj = feed_list_from_file(subj, "subjectives.txt")
-    
-    print(adj)        
-    print(subj)
-            
+    for _ in range(10):
+        result = ""
+        random.choice.shuffle(adj)
+        for a in range(megaroll("1D2")):
+            result += adj[a]
+        result += random.choice(subj)
+        print(result)
+                
         
 
 
