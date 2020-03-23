@@ -1,2 +1,2 @@
 # simonaendertstaendigmeinung
-Hallo
+[[https://github.com/spheppner/simonaendertstaendigmeinung/wiki]]
