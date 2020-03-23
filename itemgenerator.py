@@ -1,4 +1,7 @@
 import random
+import os
+
+
 
 def megaroll(dicestring="1d6 1d20", bonus=0):
     """roll all the dice in the dicestring and adds a bonus to the sum
@@ -88,3 +91,29 @@ def randomizer(list_of_chances=(1.0,)):
             return i
     else:
         raise SystemError("problem with list of chances:", list_of_chances)
+
+def feed_list_from_file(listvar, filename):
+    """takes filelname and search for this filename in the 'data' folder.
+    add each line of this file to the list 'listvar' and returns listvar"""
+    datafilename = os.path.join("data", filename)
+    with with open(datafilename) as f:
+        lines = f.readlines()
+    for line in lines:
+        listvar.append(line.strip())
+    return listvar
+
+
+def main():
+    adj = []
+    subj = []
+    adj = feed_list_from_file(adj, "adjectives.txt")
+    subj = feed_list_from_file(subj, "subjectives.txt")
+    
+    print(adj)        
+    print(subj)
+            
+        
+
+
+if __name__ == "__main__":
+    main()
