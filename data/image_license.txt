@@ -1,0 +1,2 @@
+png images are from the awesome Dungeon Crawl project http://crawl.develz.org/
+as far as i understood the license is CC0.
