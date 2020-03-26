@@ -1258,8 +1258,8 @@ class Game():
         self.log.append("Welcome to the first dungeon level (level 0)!")
         self.log.append("Use cursor keys to move around")
         self.load_level(0, "level001.txt", "data")
-        # self.load_level(1, "level002.txt", "data")
-        # self.load_level(2, "level003.txt", "data")
+        self.load_level(1, "level002.txt", "data")
+        self.load_level(2, "level003.txt", "data")
         # TODO join create_empty_dungeon_level mit create_rooms_tunnels
         self.create_empty_dungeon_level(tiles_x, tiles_y, filled=True, z=1)  # dungoen is full of walls,
         # carve out some rooms and tunnels in this new dungeon level
@@ -2116,6 +2116,8 @@ class Viewer():
                                                     "player.png")).convert_alpha()  # spritesheed, mostly 32x32, figures looking to the left
         # walls and flooors images need to be attributes (self.walls_img..)
         # because they are used in Viewer.wall_and_floor_theme
+        self.kelly_img = pygame.image.load(os.path.join("data","colored_tileset.png")).convert_alpha() #
+        self.kelly_dark_img = self.kelly_img.copy()
         self.walls_img = pygame.image.load(os.path.join("data", "wall.png")).convert_alpha()  # spritesheet 32x32 pixel
         self.floors_img = pygame.image.load(
             os.path.join("data", "floor.png")).convert_alpha()  # spritesheet 32x32 pixel
@@ -2128,7 +2130,7 @@ class Viewer():
         # blit a darker picture over the original to darken
         darken_percent = .50
         for (original, copy) in [(self.walls_img, self.walls_dark_img), (self.floors_img, self.floors_dark_img),
-                                 (feats_img, feats_dark_img), (main_img, main_dark_img)]:
+                                 (feats_img, feats_dark_img), (main_img, main_dark_img), (self.kelly_img, self.kelly_dark_img)]:
             dark = pygame.surface.Surface(original.get_size()).convert_alpha()
             dark.fill((0, 0, 0, darken_percent * 255))
             copy.blit(dark, (0, 0))  # blit dark surface over original
@@ -2264,6 +2266,22 @@ class Viewer():
             lightfloors.append(pygame.Surface.subsurface(self.floors_img, (x, y, 32, 32)))
             darkfloors.append(pygame.Surface.subsurface(self.floors_dark_img, (x, y, 32, 32)))
         Floor.images = [lightfloors, darkfloors]
+        # ------------- kelly overwrite walls , 16x16 ---------------------
+        
+        lightwalls = []
+        darkwalls = []
+        # ------------------------------------------------- x, y (left-top corner), width, height
+        lightwalls.append(self.resize_tile_to_gridsize(pygame.Surface.subsurface(self.kelly_img, (170, 289, 16, 16))))
+        darkwalls.append(self.resize_tile_to_gridsize(pygame.Surface.subsurface(self.kelly_dark_img, (170, 289, 16, 16))))
+        lightwalls.append(self.resize_tile_to_gridsize(pygame.Surface.subsurface(self.kelly_img, (170, 306, 16, 16))))
+        darkwalls.append(self.resize_tile_to_gridsize(pygame.Surface.subsurface(self.kelly_dark_img, (170, 306, 16, 16))))
+
+        Wall.images = [lightwalls, darkwalls]
+
+    def resize_tile_to_gridsize(self, original):
+        """takes the original bitmap, transform it to Viewer.grid_size x Viewer.grid_size and returns it"""
+        return pygame.transform.scale(original, (Viewer.grid_size[0], Viewer.grid_size[1]))
+
 
     def tile_blit(self, surface, x_pos, y_pos, corr_x=0, corr_y=0):
         """correctly blits a surface at tile-position x,y, so that the player is always centered at pcx, pcy"""
