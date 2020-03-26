@@ -2267,7 +2267,7 @@ class Viewer():
             darkfloors.append(pygame.Surface.subsurface(self.floors_dark_img, (x, y, 32, 32)))
         Floor.images = [lightfloors, darkfloors]
         # ------------- kelly overwrite walls , 16x16 ---------------------
-        
+
         lightwalls = []
         darkwalls = []
         # ------------------------------------------------- x, y (left-top corner), width, height
@@ -2275,6 +2275,8 @@ class Viewer():
         darkwalls.append(self.resize_tile_to_gridsize(pygame.Surface.subsurface(self.kelly_dark_img, (170, 289, 16, 16))))
         lightwalls.append(self.resize_tile_to_gridsize(pygame.Surface.subsurface(self.kelly_img, (170, 306, 16, 16))))
         darkwalls.append(self.resize_tile_to_gridsize(pygame.Surface.subsurface(self.kelly_dark_img, (170, 306, 16, 16))))
+        lightwalls.append(self.resize_tile_to_gridsize(pygame.Surface.subsurface(self.kelly_img, (187, 306, 16, 16))))
+        darkwalls.append(self.resize_tile_to_gridsize(pygame.Surface.subsurface(self.kelly_dark_img, (187, 306, 16, 16))))
 
         Wall.images = [lightwalls, darkwalls]
 
