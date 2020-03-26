@@ -1,8 +1,6 @@
 import random
 import os
 
-
-
 def megaroll(dicestring="1d6 1d20", bonus=0):
     """roll all the dice in the dicestring and adds a bonus to the sum
     1d6 means one 6-sided die without re-roll
@@ -28,7 +26,6 @@ def megaroll(dicestring="1d6 1d20", bonus=0):
         # print("---result of", code, "is :", str(total))
     # print("adding " + str(bonus) + "=", str(total + bonus))
     return total + bonus
-
 
 def roll(dice, bonus=0, reroll=True):
     """simulate a dice throw, and adding a bonus
@@ -72,25 +69,25 @@ def roll(dice, bonus=0, reroll=True):
     return total + bonus
 
 
-def minmax(value, lower_limit=-1, upper_limit=1):
-    """constrains a value inside two limits"""
-    value = max(lower_limit, value)
-    value = min(upper_limit, value)
-    return value
+#def minmax(value, lower_limit=-1, upper_limit=1):
+#    """constrains a value inside two limits"""
+#    value = max(lower_limit, value)
+#    value = min(upper_limit, value)
+#    return value
 
 
-def randomizer(list_of_chances=(1.0,)):
-    """gives back an integer depending on chance.
-       e.g. randomizer((.75, 0.15, 0.05, 0.05)) gives in 75% 0, in 15% 1, and in 5% 2 or 3"""
-    total = sum(list_of_chances)
-    v = random.random() * total  # a value between 0 and total
-    edge = 0
-    for i, c in enumerate(list_of_chances):
-        edge += c
-        if v <= edge:
-            return i
-    else:
-        raise SystemError("problem with list of chances:", list_of_chances)
+#def randomizer(list_of_chances=(1.0,)):
+#    """gives back an integer depending on chance.
+#       e.g. randomizer((.75, 0.15, 0.05, 0.05)) gives in 75% 0, in 15% 1, and in 5% 2 or 3"""
+#    total = sum(list_of_chances)
+#    v = random.random() * total  # a value between 0 and total
+#    edge = 0
+#    for i, c in enumerate(list_of_chances):
+#        edge += c
+#        if v <= edge:
+#            return i
+#    else:
+#        raise SystemError("problem with list of chances:", list_of_chances)
 
 def feed_list_from_file(listvar, filename):
     """takes filelname and search for this filename in the 'data' folder.
@@ -102,22 +99,56 @@ def feed_list_from_file(listvar, filename):
         listvar.append(line.strip())
     return listvar
 
-
-def main():
-    adj = []
-    subj = []
-    adj = feed_list_from_file(adj, "adjectives.txt")
-    subj = feed_list_from_file(subj, "subjectives.txt")
-    for _ in range(10):
-        result = ""
-        random.shuffle(adj)
-        for a in range(megaroll("1D2")):
-            result += adj[a] + " "
-        result += random.choice(subj)
-        print(result)
-                
+class Item:
+    
+    def __init__(self):
+        
+        self.item_type = random.choice(("weapon","weapon"))#"armour","accessoires","potions","scrolls","edibles"))
+        
+        if self.item_type == "weapon":
+            self.sub_type = random.choice(("sword","axe","scepter","wand","dagger","bow"))
+            bonus_damages = ["fire_bonus","cold_bonus","lightning_bonus","physical_bonus"]
+            vulnerabilities = ["fire_weakness","cold_weakness","lightning_weakness"]
+            
+            
+            
+            self.rarity = megaroll("1D6")//5
+            self.name = name_generator(self.item_type,self.rarity)
+            #self.color = random.choice((""))
+            for _ in range(self.rarity):
+                amount = megaroll("1D20")//19+1
+                if random.random() < 0.66:
+                    bonus = random.choice(bonus_damages)
+                else:
+                    bonus = random.choice(vulnerabilities)
+                if bonus in self.__dict__:
+                    self.__dict__[bonus] += amount
+                else:
+                    setattr(self,bonus,amount)
+            print(self.__dict__)
+            
+        #elif self.item_type == "armour":
+        #   self.sub_type = random.choice(("helmet","plate","shoes","gloves"))
+        #self.name
+        #self.num_sockets
+        
+        
+def name_generator(itemtype,rar):
+	if itemtype == "weapon":
+		adj = []
+		subj = []
+		adj = feed_list_from_file(adj, "adjectives.txt")
+		subj = feed_list_from_file(subj, "weapon_nouns.txt")
+		result = ""
+		random.shuffle(adj)
+		for a in range(megaroll("1D2")):
+			result += adj[a] + " "
+		result += random.choice(subj)
+	if rar > 3:
+		result += " of doom"
+	return result
+        
         
 
-
 if __name__ == "__main__":
-    main()
+	Item()
