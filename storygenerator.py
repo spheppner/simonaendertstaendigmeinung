@@ -103,72 +103,146 @@ def feed_list_from_file(listvar, filename):
     return listvar
 
 def story():
-	x = Person()
-	for n in World.persons.values():
-            print(n.history())
+    for _ in range(5):
+        x = Person(min_age = 20, max_age=25, year=2020)  ## adam und eva *2.5
+    for year in range(1921, 2099):
+        #for n in World.persons.values()
+        for n in [p for p in World.persons.values()]:
+            n.update(year)
+        for n in World.persons.values():
+            if n.update_year is None or n.update_year != year:
+                n.update(year)
+    for n in World.persons.values():
+        n.print_history()
   
 class Person:
 
     number = 0
     
     
-    def __init__(self):
+    def __init__(self, year, min_age=0, max_age=95):
         """creates a person with full history"""
         self.number = Person.number
         Person.number += 1
         World.persons[self.number] = self
         self.text = ""
-        self.gender = random.choice(("male","female","trans"))
-        self.birth_year = random.randint(2020,2099)
-        self.place_of_birth = random.choice(("Vienna", "Munich", "Berlin"))
+        self.gender = random.choice(("male","female"))
+        #self.year = year
+        self.birth_year =  year - random.randint(min_age, max_age)
+
+        #self.place_of_birth = random.choice(("Vienna", "Munich", "Berlin"))
         self.youth = random.choice(("student", "worker", "unemployed"))
         self.job = random.choice(("office clerk", "salesman", "doctor"))
-        self.marriages = set() # numbers only !
+        self.married = None # numbers only !
+        self.ex_partners = []
         self.hobbies = random.choice(("watching tv", "annoying people", "painting walls"))
-        self.children = set() # only numbers!
-        self.friends = set()  # only numbers !
-        self.foes = set()  # only number!
+        self.children = [] # only numbers!
+        self.friends = []  # only numbers !
+        self.foes = []  # only number!
         self.ideology = random.choice(("conservative", "liberal", "ecological", "socialist", "communist", "anarchist", "religious", "uninterested"))
-        self.get_friends()
-        self.get_married()
-        ##elf.get_children()
+        #self.get_friends()
+        #self.get_married()
+        self.history = [str(self.number) + "====== arriving in city with those attributes:" + str(self.__dict__)]
+        #self.get_children()
+        self.update_year = None
+
+    def update(self, year):
+        text = "year {}: ".format(year)
+        if self.married is None:
+            # chance to find partner
+            if random.random() < 0.15:
+                spouse = self.get_married(year)
+                if spouse is None:
+                    text += "tried very hard but failed to marry someone"
+                else:
+                    text += "suscessfully married to {}!".format(self.married)
+        #chance to find new friend
+        if random.random() < 0.1:
+            newfriend = self.get_friends(year)
+            if newfriend is None:
+                text += "tried to start a friendship but failed."
+            else:
+                text += " Becomes friend with {}.".format(newfriend)
+
+        #chance to loose friend
+        if len(self.friends) > 0 and random.random() < 0.05:
+            exfriend = random.choice(self.friends)
+            self.friends.remove(exfriend)
+            ## TODO becomes foe ?
+            text += " Ends friendship with {}.".format(exfriend)
+            
+            World.persons[exfriend].friends.remove(self.number)
+            World.persons[exfriend].history.append("{}: Looses friendship with {}".format(year,self.number))
+           
+        # chance to get baby
+        self.get_children(year)
         
-    def get_friends(self):
+        self.history.append(text)
+        self.update_year = year
+
+
+    def get_friends(self, year):
         """friends must have: different number, age-difference +- 10 at max. """
-        for _ in range(megaroll("1d6")-1):
-            candidates = [p for p in World.persons.values() if p.number != self.number and abs(p.birth_year - self.birth_year) < 11 and p.number not in self.friends and p.number not in self.foes and p.number not in self.children and p.number not in self.marriages]
-            if len(candidates) == 0:
-                continue
-            x = random.choice(candidates).number
-            self.friends.add(x)
-            # gegenseitige Freundschaft:
-            World.persons[x].friends.add(self.number)
+
+
+        candidates = [p for p in World.persons.values() if p.number != self.number and abs(p.birth_year - self.birth_year) < 11 and p.number not in self.friends and p.number not in self.foes and p.number not in self.children and p.number != self.married and self.birth_year < year-5]
+        if len(candidates) == 0:
+            return None
+        x = random.choice(candidates).number
+        self.friends.append(x)
+        # gegenseitige Freundschaft:
+        World.persons[x].friends.append(self.number)
+        World.persons[x].history.append("{}: Accepted friendship request of {} ".format(year, self.number))
+        return x
             
-    def get_married(self):
-        """married people must have: different number, age-difference +- 5 at max. """
-        for _ in range(megaroll("1d3")-1):
-            candidates = [p for p in World.persons.values() if p.number != self.number and abs(p.birth_year - self.birth_year) < 6 and p.number not in self.friends and p.number not in self.foes and p.number not in self.children and p.number not in self.marriages and p.gender != self.gender and self.birth_year < 2082]
-            if len(candidates) == 0:
-                continue
-            x = random.choice(candidates).number
-            self.marriages.add(x)
-            # gegenseitige Heirat:
-            World.persons[x].marriages.add(self.number)
+    def get_married(self, year):
+        """married people must have: different number, age-difference +- 10 at max. """
+
+
+        candidates = [p for p in World.persons.values() if p.married is None and p.number != self.number and abs(p.birth_year - self.birth_year) < 16 and  p.number not in self.foes and p.number not in self.children  and p.gender != self.gender and p.birth_year < year-20]
+        if len(candidates) == 0:
+            return None
+        x = random.choice(candidates).number
+        self.married = x
+        # remove spouse of friendlist to avoid becoming ex-friend
+        if x in self.friends:
+            self.friends.remove(x)
+        if self.number in World.persons[x].friends:
+            World.persons[x].friends.remove(self.number)
+        #self.marriages.add(x)
+        # gegenseitige Heirat:
+        World.persons[x].married = self.number
+        World.persons[x].history.append("{}: Gracefully accepted marriage proposal of {} ".format(year, self.number))
+        return x
+
             
-    def get_children(self):
+    def get_children(self,year):
         """children only from married couple (including ex), children for both parents! children at least 20 years younger"""
-        if len(self.marriages) == 0:
-            return
+        
+        if self.married is not None:
+            children = len(self.children)
+            p = 1/(3+children)
+            if random.random() < p:
+                # NEUER MENSCH BABABABY
+                baby = Person(year, min_age=0, max_age=0)
+                self.children.append(baby.number)
+                World.persons[self.married].children.append(baby.number)
+                self.history.append("{}: Got a baby: {}".format(year,baby.number))
+                World.persons[self.married].history.append("{}: Got a baby: {}".format(year,baby.number))
+        
+        #if len(self.marriages) == 0:
+        #    return
         #for _ in range(megaroll("1D3")-1):
         #    partner = World.persons[random.choice(self.marriages)]
-            #candidates = [p for p in World.persons.values() if p.number != self.number and p.number not in self.marriages and p.number not in self.friends and p.number not in self.foes and p.number not in self.children and p.number and p.birth_year > self.birth_year+20 and p.birth_year > partner.birth_year + 20]
+            #candidates = [p for p in World.persons.values() if p.number != self.number and p.number not in self.marriages and p.number not in self.friends and p.number not in self.foes and p.number not in self.children and p.number  and p.birth_year > self.birth_year+20 and p.birth_year > partner.birth_year + 20]
                         
             
         #    x = random.choice(candidates).number
         #    self.children.add(x)
 
-    def history(self):
-        return self.__dict__
+    def print_history(self):
+        for line in self.history:
+            print(line)
 
   
   
