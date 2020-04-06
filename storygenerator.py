@@ -1,6 +1,7 @@
 import random
 import os
 
+## TODO: Evilness, Morality, Death
 
 class World:
     persons = {}
@@ -115,9 +116,9 @@ def story():
     feed_list_from_file(World.first_names_female, "female_firstnames.txt")
     print(World.last_names)
 
-
-    for _ in range(5):
-        x = Person(min_age=20, max_age=25, year=2020)  ## adam und eva *2.5
+    
+    for nr in range(10):
+        x = Person(min_age=20, max_age=25, year=2020, gender="male" if nr % 2 == 0 else "female")  ## adam und eva *2.5
     for year in range(1921, 2099):
         # for n in World.persons.values()
         for n in [p for p in World.persons.values()]:
@@ -132,16 +133,18 @@ def story():
 class Person:
     number = 0
 
-    def __init__(self, year, min_age=0, max_age=95, last_name = None, immigrant=True):
+    def __init__(self, year, min_age=0, max_age=95, last_name = None, immigrant=True, gender=None):
         """creates a person with full history"""
         self.number = Person.number
         Person.number += 1
         World.persons[self.number] = self
         self.text = ""
         self.last_name = last_name if last_name is not None else random.choice(World.last_names)
-        self.gender = random.choice(("male", "female"))
+        self.gender = random.choice(("male", "female")) if gender is None else gender
         self.first_name = random.choice(World.first_names_male if self.gender == "male" else World.first_names_female)
-
+        
+        self.probability_of_death = 0.001
+        self.death_year = None
         # self.year = year
         self.birth_year = year - random.randint(min_age, max_age)
 
@@ -158,22 +161,30 @@ class Person:
                                        "religious", "uninterested"))
         # self.get_friends()
         # self.get_married()
-        self.history = [str(self.number) + "====== "+ "arriving in city" if immigrant else "born here" +" with those attributes:" + str(self.__dict__)]
+        text = str(self.number) + "====== "+ "arriving in city" if immigrant else "born here" 
+        self.history = [(text + " with those attributes:" + str(self.__dict__))]
         # self.get_children()
         self.update_year = None
 
     def update(self, year):
+        if self.death_year is not None:
+            return
+        # double death probability every 8 years
+        age = year-self.birth_year
+        if age % 8 == 0:
+            self.probability_of_death *= 2
+        
         text = "year {}: ".format(year)
-        if self.married is None:
+        if self.married is None and age > 18:
             # chance to find partner
-            if random.random() < 0.15:
+            if random.random() < 0.8:
                 spouse = self.get_married(year)
                 if spouse is None:
                     text += "tried very hard but failed to marry someone"
                 else:
                     text += "suscessfully married to {}!".format(self.married)
         # chance to find new friend
-        if random.random() < 0.1:
+        if random.random() < 0.2:
             newfriend = self.get_friends(year)
             if newfriend is None:
                 text += "tried to start a friendship but failed."
@@ -195,12 +206,14 @@ class Person:
 
         self.history.append(text)
         self.update_year = year
+        if random.random() < self.probability_of_death:
+            self.history.append("{}: Died of natural causes.".format(year))
+            self.death_year = year
 
     def get_friends(self, year):
-        """friends must have: different number, age-difference +- 10 at max. """
-
-        candidates = [p for p in World.persons.values() if p.number != self.number and abs(
-            p.birth_year - self.birth_year) < 11 and p.number not in self.friends and p.number not in self.foes and p.number not in self.children and p.number != self.married and self.birth_year < year - 5]
+        """friends must have: different number, age-difference +- 10 at max. """ 
+        candidates = [p for p in World.persons.values() if p.death_year is None and p.number != self.number and abs(
+            p.birth_year - self.birth_year) < 20 and p.number not in self.friends and p.number not in self.foes and p.number not in self.children and p.number != self.married]# and self.birth_year < year - 5]
         if len(candidates) == 0:
             return None
         x = random.choice(candidates).number
@@ -213,7 +226,7 @@ class Person:
     def get_married(self, year):
         """married people must have: different number, age-difference +- 10 at max. """
 
-        candidates = [p for p in World.persons.values() if p.married is None and p.number != self.number and abs(
+        candidates = [p for p in World.persons.values() if p.death_year is None and p.married is None and p.number != self.number and abs(
             p.birth_year - self.birth_year) < 16 and p.number not in self.foes and p.number not in self.children and p.gender != self.gender and p.birth_year < year - 20]
         if len(candidates) == 0:
             return None
@@ -235,7 +248,7 @@ class Person:
             new_name = random.choice(World.last_names)
             self.last_name = new_name
             World.persons[x].last_name = new_name
-            self.history.append("year {}: The marriaged couple choose for both the new family name {}".format(year, new_name))
+            self.history.append("{}: The married couple chose the new family name {}".format(year, new_name))
         return x
 
     def get_children(self, year):
@@ -260,7 +273,6 @@ class Person:
 
         #    x = random.choice(candidates).number
         #    self.children.add(x)
-
     def print_history(self):
         for line in self.history:
             print(line)
