@@ -132,7 +132,7 @@ def story():
 class Person:
     number = 0
 
-    def __init__(self, year, min_age=0, max_age=95, last_name = None):
+    def __init__(self, year, min_age=0, max_age=95, last_name = None, immigrant=True):
         """creates a person with full history"""
         self.number = Person.number
         Person.number += 1
@@ -158,7 +158,7 @@ class Person:
                                        "religious", "uninterested"))
         # self.get_friends()
         # self.get_married()
-        self.history = [str(self.number) + "====== arriving in city with those attributes:" + str(self.__dict__)]
+        self.history = [str(self.number) + "====== "+ "arriving in city" if immigrant else "born here" +" with those attributes:" + str(self.__dict__)]
         # self.get_children()
         self.update_year = None
 
@@ -219,6 +219,8 @@ class Person:
             return None
         x = random.choice(candidates).number
         self.married = x
+        # take name of partner
+        self.last_name = World.persons[x].last_name
         # remove spouse of friendlist to avoid becoming ex-friend
         if x in self.friends:
             self.friends.remove(x)
@@ -228,6 +230,12 @@ class Person:
         # gegenseitige Heirat:
         World.persons[x].married = self.number
         World.persons[x].history.append("{}: Gracefully accepted marriage proposal of {} ".format(year, self.number))
+        # little chance that both choose a comlete new name
+        if random.random() < 0.15:
+            new_name = random.choice(World.last_names)
+            self.last_name = new_name
+            World.persons[x].last_name = new_name
+            self.history.append("year {}: The marriaged couple choose for both the new family name {}".format(year, new_name))
         return x
 
     def get_children(self, year):
@@ -238,7 +246,7 @@ class Person:
             p = 1 / (3 + children)
             if random.random() < p:
                 # NEUER MENSCH BABABABY
-                baby = Person(year, min_age=0, max_age=0, last_name=self.last_name)
+                baby = Person(year, min_age=0, max_age=0, last_name=self.last_name, immigrant=False)
                 self.children.append(baby.number)
                 World.persons[self.married].children.append(baby.number)
                 self.history.append("{}: Got a baby: {}".format(year, baby.number))
