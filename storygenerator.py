@@ -7,12 +7,6 @@ class World:
     first_names_male = []
     first_names_female = []
     last_names = []
-    
-    def __init__(self):
-        World.last_names = feed_list_from_file("surnames.txt")
-        World.first_names_male = feed_list_from_file("male_firstnames.txt")
-        World.first_names_female = feed_list_from_file("female_firstnames.txt")
-
 
 def megaroll(dicestring="1d6 1d20", bonus=0):
     """roll all the dice in the dicestring and adds a bonus to the sum
@@ -115,7 +109,13 @@ def feed_list_from_file(listvar, filename):
 
 
 def story():
-    earth = World()
+    print("feeding names list...")
+    feed_list_from_file(World.last_names, "surnames.txt")
+    feed_list_from_file(   World.first_names_male, "male_firstnames.txt")
+    feed_list_from_file(World.first_names_female, "female_firstnames.txt")
+    print(World.last_names)
+
+
     for _ in range(5):
         x = Person(min_age=20, max_age=25, year=2020)  ## adam und eva *2.5
     for year in range(1921, 2099):
@@ -141,7 +141,7 @@ class Person:
         self.last_name = last_name if last_name is not None else random.choice(World.last_names)
         self.gender = random.choice(("male", "female"))
         self.first_name = random.choice(World.first_names_male if self.gender == "male" else World.first_names_female)
-        
+
         # self.year = year
         self.birth_year = year - random.randint(min_age, max_age)
 
