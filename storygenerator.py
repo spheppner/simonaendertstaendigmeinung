@@ -1,13 +1,30 @@
 import random
 import os
 
-## TODO: Divorce
+## TODO: Criminality from other factors, Actual game: mehrere varianten
+
+#  File "storygenerator.py", line 434, in <module>
+#    story()
+#  File "storygenerator.py", line 136, in story
+#    n.update(year)
+#  File "storygenerator.py", line 325, in update
+#    World.persons[friend].friends.remove(px.number)
+#ValueError: list.remove(x): x not in list
 
 class World:
     persons = {}
     first_names_male = []
     first_names_female = []
     last_names = []
+    radiation_level = 0 # how radiated the world is - how bad the people are. (moralic mutation)
+    # --- 0: neutral mixed, 1: bad wins over neutral, 2: bad wins over good, 3: bad wins over good and neutral
+
+def create_genes():
+    """ Creates a list of three genes, each genes can be either good, neutral or bad (g, n, b)"""
+    genom = []
+    for _ in range(10):
+        genom.append(random.choice((0.0, 0.5, 0.5, 1.0)))
+    return genom
 
 def megaroll(dicestring="1d6 1d20", bonus=0):
     """roll all the dice in the dicestring and adds a bonus to the sum
@@ -112,21 +129,33 @@ def feed_list_from_file(listvar, filename):
 def story():
     print("feeding names list...")
     feed_list_from_file(World.last_names, "surnames.txt")
-    feed_list_from_file(   World.first_names_male, "male_firstnames.txt")
+    feed_list_from_file(World.first_names_male, "male_firstnames.txt")
     feed_list_from_file(World.first_names_female, "female_firstnames.txt")
-    
+
     for nr in range(15):
         x = Person(min_age=0, max_age=25, year=2000, gender="male" if nr % 2 == 0 else "female")  ## adam und eva *2.5
     for year in range(2000, 2100):
         # for n in World.persons.values()
-        
+
         for n in [p for p in World.persons.values()]:
             n.update(year)
         for n in [p for p in World.persons.values()]:
             if n.update_year is None or n.update_year != year:
                 n.update(year)
         print(year, len([p for p in World.persons.values() if p.death_year is None]), len([p for p in World.persons.values() if p.death_year is None and p.married is not None]))
-    
+        print(World.persons.keys())
+        print(sum([sum(p.genom)/10 for p in World.persons.values() if p.death_year is None])/len([p for p in World.persons.values() if p.death_year is None]))
+        #command = input(">>> ")
+        #if command == "":
+        #    continue
+        #try:
+        #    number = int(command)
+        #except:
+        #    print("Could not interpret number")
+        #    continue
+        #print(World.persons[number].history)
+        #input("Press Enter!")
+
     #names = {}
     #for n in World.persons.values():
     #    if n.last_name in names:
@@ -134,9 +163,9 @@ def story():
     #    else:
     #        names[n.last_name] = 1
     #print(names)
-    
+
     #    n.print_history()
-    
+
 class Person:
     number = 0
 
@@ -150,13 +179,11 @@ class Person:
         self.gender = random.choice(("male", "female")) if gender is None else gender
         self.first_name = random.choice(World.first_names_male if self.gender == "male" else World.first_names_female)
         self.probability_of_death = 0.0001
-        self.moral = random.randint(0,1) * 0.6 + 0.4
-        self.situation = random.randint(5, 10)
-        
+
         self.death_year = None
         self.birth_year = year - random.randint(min_age, max_age)
         self.marriage_year = None
-        
+
         if self.birth_year < year:
             age = year-self.birth_year
             for i in range(age):
@@ -167,7 +194,6 @@ class Person:
         self.youth = random.choice(("student", "worker", "unemployed"))
         self.job = random.choice(("office clerk", "salesman", "doctor"))
         self.married = None  # numbers only !
-        self.ex_partners = []
         self.hobbies = random.choice(("watching tv", "annoying people", "painting walls"))
         self.children = []  # only numbers!
         self.friends = []  # only numbers !
@@ -176,14 +202,62 @@ class Person:
                                        "religious", "uninterested"))
         # self.get_friends()
         # self.get_married()
-        text = str(self.number) + "====== "+ "arriving in city" if immigrant else "born here" 
+        text = str(self.number) + "====== "+ "arriving in city" if immigrant else "born here"
         self.history = [(text + " with those attributes:" + str(self.__dict__))]
         # self.get_children()
         self.update_year = None
 
+        parents = self.get_parents()
+        print(parents)
+
+        if len(parents) != 2:
+            print("Random Genes: ", end="")
+            self.genom = create_genes()
+        else:
+            self.genom = []
+            genom_papa = World.persons[parents[0]].genom
+            genom_mama = World.persons[parents[1]].genom
+            if len(genom_papa) != len(genom_mama):
+                raise Exception("Genom length unequal")
+                # TODO: handle case
+            for x in range(len(genom_papa)):
+                if World.radiation_level == 0:
+                    # ---- Mixing genes -> Equal Chance ----
+                    source = random.choice((0,1))
+                    self.genom.append(World.persons[parents[source]].genom[x])
+                elif World.radiation_level == 1:
+                    # ---- Mixing genes -> Bad wins over neutral ----
+                    if (genom_papa[x] == 0.0 and genom_mama[x] == 0.5) or (genom_mama[x] == 0.0 and genom_papa[x] == 0.5):
+                        self.genom.append(0.0)
+                    else:
+                        source = random.choice((0,1))
+                        self.genom.append(World.persons[parents[source]].genom[x])
+                elif World.radiation_level == 2:
+                    # ---- Mixing genes -> Bad wins over good ----
+                    if (genom_papa[x] == 0.0 and genom_mama[x] == 1.0) or (genom_mama[x] == 0.0 and genom_papa[x] == 1.0):
+                        self.genom.append(0.0)
+                    else:
+                        source = random.choice((0,1))
+                        self.genom.append(World.persons[parents[source]].genom[x])
+                elif World.radiation_level == 3:
+                    # ---- Mixing genes -> Bad wins over good and neutral ----
+                    if genom_papa[x] == 0.0 or genom_mama[x] == 0.0:
+                        self.genom.append(0.0)
+                    else:
+                        source = random.choice((0,1))
+                        self.genom.append(World.persons[parents[source]].genom[x])
+                # TODO: all other cases like neutral and good cases
+
+            print("Mixed Genes: ", end="")
+        print(self.genom, "Mittelwert:",(sum(self.genom) / len(self.genom)))
+        # moral 0 always does evil things
+        # moral 1 never does evil things
+        self.moral = sum(self.genom) / len(self.genom)
+        self.situation = random.randint(5, 10)
+
     #def update(self, year):
     #    if self.death_year is not None:
-    #        return(self.number) + "====== "+ "arriving in city" if immigrant else "born here" 
+    #        return(self.number) + "====== "+ "arriving in city" if immigrant else "born here"
     #    self.history = [(text + " with those attributes:" + str(self.__dict__))]
     #    # self.get_children()
     #    self.update_year = None
@@ -191,17 +265,17 @@ class Person:
     def update(self, year):
         if self.death_year is not None:
             return
-            
+
         # ----- double death probability every 8 years -----
         age = year-self.birth_year
         if age % 8 == 0:
             self.probability_of_death *= 2
-        
+
         # ----- trying to marry someone -----
         if self.married is None and age > 16:
             if random.random() < 0.9:
                 spouse = self.get_married(year)
-                
+
         # ----- chance to find new friend -----
         if random.random() < 0.3:
             newfriend = self.get_friends(year)
@@ -216,14 +290,14 @@ class Person:
 
         # ----- chance to get baby -----
         self.get_children(year)
-        
+
         # ----- changing of situation -----
         self.situation += random.randint(-2, 3)
         if self.situation < 0:
             self.moral *= 0.85
         else:
             self.moral *= 1.1
-        
+
         # ----- crime event -----
         if self.situation < 0:
             p1 = abs(self.situation) * 0.01
@@ -232,42 +306,41 @@ class Person:
                 if random.random() > self.moral:
                     crime = random.choice(("destruction_friendship", "cheat_marriage", "stealing", "killing"))
                     if crime == "destruction_friendship":
-                        nx = random.choice(list(World.persons.keys()))
-                        x = World.persons[nx]
-                        if x.friends != []:
-                            y = x.friends[0]
-                            World.persons[nx].friends.remove(y)
-                            World.persons[y].friends.remove(nx)
-                            self.history.append("{}: {} destroyed the friendship of {} and {}".format(year, self.number, nx, y))
-                            World.persons[nx].history.append("{}: {} destroyed the friendship of {} and {}".format(year, self.number, nx, y))
-                            World.persons[y].history.append("{}: {} destroyed the friendship of {} and {}".format(year, self.number, nx, y))
-                            
+                        px = random.choice([p for p in World.persons.values() if p.death_year is None and p.friends != []])
+                        x = World.persons[px.number]
+                        y = x.friends[0]
+                        World.persons[px.number].friends.remove(y)
+                        World.persons[y].friends.remove(px.number)
+                        self.history.append("{}: {} destroyed the friendship of {} and {}".format(year, self.number, px.number, y))
+                        World.persons[px.number].history.append("{}: {} destroyed the friendship of {} and {}".format(year, self.number, px.number, y))
+                        World.persons[y].history.append("{}: {} destroyed the friendship of {} and {}".format(year, self.number, px.number, y))
+
+
                     elif crime == "cheat_marriage":
-                        nx = random.choice(list(World.persons.keys()))
-                        x = World.persons[nx]
-                        if x.married is not None:
-                            y = x.married
-                            World.persons[nx].married = None
-                            World.persons[y].married = None
-                            self.history.append("{}: Destroyed the marriage of {} and {}".format(year, nx, y))
-                            World.persons[nx].history.append("{}: {} destroyed the marriage of {} and {}".format(year, self.number, nx, y))
-                            World.persons[y].history.append("{}: {} destroyed the marriage of {} and {}".format(year, self.number, nx, y))
+                        px = random.choice([p for p in World.persons.values() if p.death_year is None and p.married is not None])
+                        x = World.persons[px.number]
+                        y = x.married
+                        World.persons[px.number].married = None
+                        World.persons[y].married = None
+                        self.history.append("{}: Destroyed the marriage of {} and {}".format(year, px.number, y))
+                        World.persons[px.number].history.append("{}: {} destroyed the marriage of {} and {}".format(year, self.number, px.number, y))
+                        World.persons[y].history.append("{}: {} destroyed the marriage of {} and {}".format(year, self.number, px.number, y))
                     elif crime == "stealing":
-                        nx = random.choice(list(World.persons.keys()))
-                        x = World.persons[nx]
+                        px = random.choice([p for p in World.persons.values() if p.death_year is None])
+                        x = World.persons[px.number]
                         x.situation -= random.randint(10,20)
                     elif crime == "killing":
                         ## TODO extra check
-                        nx = random.choice(list(World.persons.keys()))
-                        x = World.persons[nx]
+                        px = random.choice([p for p in World.persons.values() if p.death_year is None])
+                        x = World.persons[px.number]
                         x.history.append("{}: Got killed by {}.".format(year, self.number))
                         x.death_year = year
-                        if self.married is not None:
+                        if x.married is not None:
                             World.persons[x.married].married = None
                         for friend in x.friends:
-                            World.persons[friend].friends.remove(nx)
-                    print(crime, self.number, year, self.situation, self.moral)          
-        
+                            World.persons[friend].friends.remove(px.number)
+                    print(crime, self.number, year, self.situation, self.moral)
+
         # ----- chance to die -----
         if random.random() < self.probability_of_death:
             self.history.append("{}: Died of natural causes.".format(year))
@@ -276,9 +349,9 @@ class Person:
                 World.persons[self.married].married = None
             for friend in self.friends:
                 World.persons[friend].friends.remove(self.number)
-                
+
     def get_friends(self, year):
-        """friends must have: different number, age-difference +- 10 at max. """ 
+        """friends must have: different number, age-difference +- 10 at max. """
         candidates = [p for p in World.persons.values() if p.death_year is None and p.number != self.number and abs(
             p.birth_year - self.birth_year) < 20 and p.number not in self.friends and p.number not in self.foes and p.number not in self.children and p.number != self.married]# and self.birth_year < year - 5]
         if len(candidates) == 0:
@@ -338,11 +411,12 @@ class Person:
         p = 1 / (3 + children)
         if random.random() < p:
             # ----- Baby kriegen -----
+            babynumber = Person.number
+            self.children.append(babynumber)
+            World.persons[self.married].children.append(babynumber)
+            self.history.append("{}: Mommy got a baby: {}.".format(year, babynumber))
+            World.persons[self.married].history.append("{}: Becomes daddy of: {}.".format(year, babynumber))
             baby = Person(year, min_age=0, max_age=0, last_name=self.last_name, immigrant=False)
-            self.children.append(baby.number)
-            World.persons[self.married].children.append(baby.number)
-            self.history.append("{}: Mommy got a baby: {}.".format(year, baby.number))
-            World.persons[self.married].history.append("{}: Becomes daddy of: {}.".format(year, baby.number))
 
         # if len(self.marriages) == 0:
         #    return
@@ -352,21 +426,21 @@ class Person:
 
         #    x = random.choice(candidates).number
         #    self.children.add(x)
-        
+
     def get_parents(self):
         parents = []
         for p in [p for p in World.persons.values() if p.birth_year < self.birth_year - 15]:
             if self.number in p.children:
                 parents.append(p.number)
         return parents
-        
+
     def is_sibling(self, x):
         """ Check if person x shares at least one parent with person self"""
         for p in self.get_parents():
             if p in x.get_parents():
                 return True
         return False
-        
+
     def print_history(self):
         for line in self.history:
             print(line)
