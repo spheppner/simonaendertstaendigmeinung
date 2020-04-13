@@ -1,7 +1,7 @@
 import random
 import os
 
-## TODO: Criminality from other factors, Actual game: mehrere varianten
+## TODO: Criminality from other factors, Actual game: mehrere varianten, Divorce
 
 #  File "storygenerator.py", line 434, in <module>
 #    story()
