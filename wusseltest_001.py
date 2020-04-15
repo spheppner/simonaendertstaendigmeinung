@@ -1,19 +1,15 @@
 
-#lukasr2026@student.vis.ac.at
+#simon@heppner.at
 """
-wuseltest pygame
-leute rennen rum, 
-pärchen finden sich, produzieren kinder etc
+Author: Simon HEPPNER
+Email: simon@heppner.at
+Github: github.com/spheppner
+Version: 001
 """
 
 import pygame
 import random
-# import inspect
-
 import os
-
-# declare constants
-
 
 class VectorSprite(pygame.sprite.Sprite):
     """base class for sprites. this class inherits from pygames sprite class"""
@@ -223,7 +219,6 @@ class FragmentSprite(VectorSprite):
         self.image.set_alpha(self.alpha)
         self.image.convert_alpha()
 
-
 class Flytext(VectorSprite):
     def __init__(self, text, fontsize=22, acceleration_factor=1.02, max_speed=300, **kwargs):
         """a text flying upward and for a short time and disappearing"""
@@ -265,7 +260,6 @@ class FlyingObject(VectorSprite):
 
         self.set_angle(self.move.angle_to(pygame.math.Vector2(1, 0)))
 
-
 def megaroll(dicestring="1d6 1d20", bonus=0):
     """roll all the dice in the dicestring and adds a bonus to the sum
     1d6 means one 6-sided die without re-roll
@@ -291,7 +285,6 @@ def megaroll(dicestring="1d6 1d20", bonus=0):
         # print("---result of", code, "is :", str(total))
     # print("adding " + str(bonus) + "=", str(total + bonus))
     return total + bonus
-
 
 def roll(dice, bonus=0, reroll=True):
     """simulate a dice throw, and adding a bonus
@@ -334,13 +327,11 @@ def roll(dice, bonus=0, reroll=True):
     # print("=total:     {}".format(total + bonus))
     return total + bonus
 
-
 def minmax(value, lower_limit=-1, upper_limit=1):
     """constrains a value inside two limits"""
     value = max(lower_limit, value)
     value = min(upper_limit, value)
     return value
-
 
 def randomizer(list_of_chances=(1.0,)):
     """gives back an integer depending on chance.
@@ -354,7 +345,6 @@ def randomizer(list_of_chances=(1.0,)):
             return i
     else:
         raise SystemError("problem with list of chances:", list_of_chances)
-
 
 def make_text(text="@", font_color=(255, 0, 255), font_size=48, font_name="mono", bold=True, grid_size=None):
     """returns pygame surface with text and x, y dimensions in pixel
@@ -374,7 +364,6 @@ def make_text(text="@", font_color=(255, 0, 255), font_size=48, font_name="mono"
         return mytext, (grid_size[0], grid_size[1])
 
     return mytext, (size_x, size_y)
-
 
 def write(background, text, x=50, y=150, color=(0, 0, 0),
           font_size=None, font_name="mono", bold=True, origin="topleft"):
@@ -405,7 +394,6 @@ def write(background, text, x=50, y=150, color=(0, 0, 0),
         background.blit(surface, (x - width // 2, y))
     elif origin == "bottomright":
         background.blit(surface, (x - width, y - height))
-
 
 def get_line(start, end):
     """Bresenham's Line Algorithm
@@ -466,10 +454,6 @@ def get_line(start, end):
         points.reverse()
     return points
 
-
-
-
-
 class CursorSprite(VectorSprite):
 
     def create_image(self):
@@ -485,7 +469,6 @@ class CursorSprite(VectorSprite):
     def update(self, seconds):
         self.create_image()  # always make new image every frame with different color
         super().update(seconds)
-
 
 class Viewer():
     width = 0  # screen x resolution in pixel
@@ -552,8 +535,7 @@ class Viewer():
            returns  distance to player tile in tiles (relative coordinates)"""
         x, y = pixelcoordinate
         return (x - self.pcx) // Viewer.grid_size[0], (y - self.pcy) // Viewer.grid_size[1]
-
-
+        
     def draw_panel(self):
         self.panelscreen.blit(self.panelscreen0, (0, 0))
         #write(self.panelscreen, text="dungeon: {}".format(self.game.player.z), x=5, y=5, color=(255, 255, 255))
@@ -586,8 +568,7 @@ class Viewer():
     #     """single images. char looks to the right by default?"""
     # self.images["arch-mage-attack"] = pygame.image.load(
     #    os.path.join("data", "arch-mage-attack.png")).convert_alpha()
-
-  
+    
     def make_background(self):
         """scans the subfolder 'data' for .jpg files, randomly selects
         one of those as background image. If no files are found, makes a
@@ -613,10 +594,8 @@ class Viewer():
             Viewer.height - Viewer.panel_width))
         self.background.convert()
 
-   
     def move_cursor_to(self, x, y):
         """moves the cursor to tiles xy, """
-        
         
         x = self.pcx + x * self.grid_size[0]
         y = self.pcy + y * self.grid_size[1]
@@ -628,8 +607,6 @@ class Viewer():
         self.cursor_x = x
         self.cursor_y = y
         # self.screen.blit(self.background, (0, 0))
-   
-   
    
     def tile_blit(self, surface, x_pos, y_pos, corr_x=0, corr_y=0):
         """correctly blits a surface at tile-position x,y, so that the player is always centered at pcx, pcy"""
@@ -718,10 +695,8 @@ class Viewer():
             self.cursor.pos = pygame.math.Vector2(self.tile_to_pixel((self.cursor_x, self.cursor_y), center=True))
             self.allgroup.draw(self.screen)
             
-
             #dirtyrects = []
 
-            
             self.draw_panel()  # always draw panel #unter allgropu draw: münzen unsichtbar, flackert
             #dirtyrects.append(pygame.Rect(Viewer.width - Viewer.panel_width, 0, Viewer.panel_width, Viewer.height))
             
@@ -731,18 +706,15 @@ class Viewer():
             write(self.screen, text=fps_text, origin="bottomright", x=Viewer.width - 2, y=Viewer.height - 2,
                   font_size=16, bold=True, color=(0, 0, 0))
             
-            
             # self.cursor.pos += pygame.math.Vector2(Viewer.grid_size[0]//2, Viewer.grid_size[1]//2) # center on tile
             # -------- next frame -------------
             # print(dirtyrects)
 
-            
             pygame.display.flip()
         # -----------------------------------------------------
         pygame.mouse.set_visible(True)
         pygame.quit()
      
-
 if __name__ == '__main__':
     #g = Game(tiles_x=80, tiles_y=40)
     Viewer(width=1200, height=800, grid_size=(32, 32))  # , (35,35))
