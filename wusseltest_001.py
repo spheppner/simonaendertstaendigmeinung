@@ -473,7 +473,7 @@ class CursorSprite(VectorSprite):
 class Viewer():
     width = 0  # screen x resolution in pixel
     height = 0  # screen y resolution in pixel
-    panel_width = 200
+    panel_width = 208
     log_height = 100
     grid_size = (32, 32)
     pcx = 0  # player x coordinate in pixel
@@ -741,4 +741,4 @@ class Viewer():
      
 if __name__ == '__main__':
     #g = Game(tiles_x=80, tiles_y=40)
-    Viewer(width=1200, height=800, grid_size=(64, 64))  # , (35,35))
+    Viewer(width=1168, height=768, grid_size=(64, 64))  # , (35,35))
