@@ -1,5 +1,4 @@
-
-#simon@heppner.at
+# simon@heppner.at
 """
 Author: Simon HEPPNER
 Email: simon@heppner.at
@@ -10,6 +9,7 @@ Version: 001
 import pygame
 import random
 import os
+
 
 class VectorSprite(pygame.sprite.Sprite):
     """base class for sprites. this class inherits from pygames sprite class"""
@@ -205,6 +205,7 @@ class VectorSprite(pygame.sprite.Sprite):
             elif self.warp_on_edge:
                 self.pos.y = 0
 
+
 class FragmentSprite(VectorSprite):
 
     def _overwrite_parameters(self):
@@ -218,6 +219,7 @@ class FragmentSprite(VectorSprite):
         self.alpha -= self.delta_alpha * seconds * 0.4  # slowly become more transparent
         self.image.set_alpha(self.alpha)
         self.image.convert_alpha()
+
 
 class Flytext(VectorSprite):
     def __init__(self, text, fontsize=22, acceleration_factor=1.02, max_speed=300, **kwargs):
@@ -240,6 +242,7 @@ class Flytext(VectorSprite):
             self.move *= self.max_speed
         VectorSprite.update(self, seconds)
 
+
 class FlyingObject(VectorSprite):
     image = None  # will be set from Viewer.create_tiles
 
@@ -259,6 +262,7 @@ class FlyingObject(VectorSprite):
         self.pos = pygame.math.Vector2(self.startpos[0], self.startpos[1])
 
         self.set_angle(self.move.angle_to(pygame.math.Vector2(1, 0)))
+
 
 def megaroll(dicestring="1d6 1d20", bonus=0):
     """roll all the dice in the dicestring and adds a bonus to the sum
@@ -285,6 +289,7 @@ def megaroll(dicestring="1d6 1d20", bonus=0):
         # print("---result of", code, "is :", str(total))
     # print("adding " + str(bonus) + "=", str(total + bonus))
     return total + bonus
+
 
 def roll(dice, bonus=0, reroll=True):
     """simulate a dice throw, and adding a bonus
@@ -327,11 +332,13 @@ def roll(dice, bonus=0, reroll=True):
     # print("=total:     {}".format(total + bonus))
     return total + bonus
 
+
 def minmax(value, lower_limit=-1, upper_limit=1):
     """constrains a value inside two limits"""
     value = max(lower_limit, value)
     value = min(upper_limit, value)
     return value
+
 
 def randomizer(list_of_chances=(1.0,)):
     """gives back an integer depending on chance.
@@ -345,6 +352,7 @@ def randomizer(list_of_chances=(1.0,)):
             return i
     else:
         raise SystemError("problem with list of chances:", list_of_chances)
+
 
 def make_text(text="@", font_color=(255, 0, 255), font_size=48, font_name="mono", bold=True, grid_size=None):
     """returns pygame surface with text and x, y dimensions in pixel
@@ -364,6 +372,7 @@ def make_text(text="@", font_color=(255, 0, 255), font_size=48, font_name="mono"
         return mytext, (grid_size[0], grid_size[1])
 
     return mytext, (size_x, size_y)
+
 
 def write(background, text, x=50, y=150, color=(0, 0, 0),
           font_size=None, font_name="mono", bold=True, origin="topleft"):
@@ -394,6 +403,7 @@ def write(background, text, x=50, y=150, color=(0, 0, 0),
         background.blit(surface, (x - width // 2, y))
     elif origin == "bottomright":
         background.blit(surface, (x - width, y - height))
+
 
 def get_line(start, end):
     """Bresenham's Line Algorithm
@@ -454,6 +464,7 @@ def get_line(start, end):
         points.reverse()
     return points
 
+
 class CursorSprite(VectorSprite):
 
     def create_image(self):
@@ -470,11 +481,12 @@ class CursorSprite(VectorSprite):
         self.create_image()  # always make new image every frame with different color
         super().update(seconds)
 
+
 class Viewer():
     width = 0  # screen x resolution in pixel
     height = 0  # screen y resolution in pixel
     panel_width = 208
-    log_height = 100
+    log_height = 0
     grid_size = (32, 32)
     pcx = 0  # player x coordinate in pixel
     pcy = 0  # player y coordinate in pixel
@@ -482,7 +494,7 @@ class Viewer():
     def __init__(self, width=640, height=400, grid_size=(32, 32), fps=60, ):
         """Initialize pygame, window, background, font,...
            default arguments """
-        #self.game = game
+        # self.game = game
         self.fps = fps
         # position in pixel where all the gold sprites are flying to:
         Viewer.grid_size = grid_size  # make global readable
@@ -490,7 +502,7 @@ class Viewer():
         Viewer.height = height
         self.cursor_x = 0
         self.cursor_y = 0
-        
+
         pygame.init()
         # player center in pixel
         Viewer.pcx = (width - Viewer.panel_width) // 2  # set player in the middle of the screen
@@ -501,12 +513,12 @@ class Viewer():
         self.playtime = 0.0
         # ------ surfaces for radar, panel and log ----
         # all surfaces are black by default
-        self.panelscreen = pygame.surface.Surface((Viewer.panel_width, Viewer.height - Viewer.panel_width))
+        self.panelscreen = pygame.surface.Surface((Viewer.panel_width, Viewer.height))# - Viewer.panel_width))
         self.panelscreen.fill((64, 128, 64))
-        self.panelscreen0 = pygame.surface.Surface((Viewer.panel_width, Viewer.height - Viewer.panel_width))
+        self.panelscreen0 = pygame.surface.Surface((Viewer.panel_width, Viewer.height))# - Viewer.panel_width))
         self.panelscreen0.fill((64, 128, 64))
         self.logscreen = pygame.surface.Surface((Viewer.width - Viewer.panel_width, Viewer.log_height))
-        
+
         # ------ background images ------
         self.backgroundfilenames = []  # every .jpg or .jpeg file in the folder 'data'
         self.make_background()
@@ -517,8 +529,25 @@ class Viewer():
             j.init()
         # ------ create bitmaps for player and dungeon tiles ----
         self.prepare_spritegroups()
-        self.cursor = CursorSprite(pos=pygame.math.Vector2(Viewer.grid_size[0]//2,Viewer.grid_size[1]//2)) #  pos=pygame.math.Vector2(x=Viewer.pcx, y=Viewer.pcy))
+        self.cursor = CursorSprite(pos=pygame.math.Vector2(Viewer.grid_size[0] // 2, Viewer.grid_size[
+            1] // 2))  # pos=pygame.math.Vector2(x=Viewer.pcx, y=Viewer.pcy))
+        self.create_map()
         self.run()
+
+
+    def create_map(self, xtiles= 40, ytiles= 40):
+        """creates a 2d array to be later represented by graphical tiles.
+        the 'map' 2d array is just a nested list of chars
+        each char represent a graphical tile"""
+        self.map = [["." for x in range(xtiles)] for y in range(ytiles)] # create a nested list
+        # set some random tiles:
+        for y, line in enumerate(self.map):
+            for x, char in enumerate(line):
+                self.map[y][x] = random.choice((".",".",".",".",".",".","a","a","a","b","b","c"))
+
+
+
+
 
     def prepare_spritegroups(self):
         self.allgroup = pygame.sprite.LayeredUpdates()  # for drawing
@@ -534,9 +563,9 @@ class Viewer():
         """transform pixelcoordinate (x,y, from pygame mouse) into grid tile coordinate."""
         #   returns  distance to player tile in tiles (relative coordinates)"""
         x, y = pixelcoordinate
-        #return (x - self.pcx) // Viewer.grid_size[0], (y - self.pcy) // Viewer.grid_size[1]
+        # return (x - self.pcx) // Viewer.grid_size[0], (y - self.pcy) // Viewer.grid_size[1]
         return x // Viewer.grid_size[0], y // Viewer.grid_size[1]
-        
+
     def draw_panel(self):
         self.panelscreen.blit(self.panelscreen0, (0, 0))
         write(self.panelscreen, text="cursor x:{} y:{} (pixel)".format(self.cursor.pos.x, self.cursor.pos.y), x=5, y=5,
@@ -545,11 +574,10 @@ class Viewer():
             self.cursor.pos.x // Viewer.grid_size[0], self.cursor.pos.y // Viewer.grid_size[1]), x=5, y=25,
               color=(255, 255, 255), font_size=12)
         # - hitpoint bar in red, starting left
-        #pygame.draw.rect(self.panelscreen, (200, 0, 0),
+        # pygame.draw.rect(self.panelscreen, (200, 0, 0),
         #                 (0, 35, self.game.player.hitpoints * Viewer.panel_width / self.game.player.hitpoints_max, 28))
         # -y35--------------------
-        
-        
+
         # blit panelscreen
         self.screen.blit(self.panelscreen, (Viewer.width - self.panel_width, 0))
 
@@ -559,21 +587,21 @@ class Viewer():
            if center is True, returns the center of the tile,
            if center is False, returns the upper left corner of the tile"""
         x, y = pos
-        #x2 = Viewer.pcx + (x - Game.player.x) * Viewer.grid_size[0]
-        #y2 = Viewer.pcy + (y - Game.player.y) * Viewer.grid_size[1]
-        x2 = Viewer.pcx + (x+1000) * Viewer.grid_size[0]
-        y2 = Viewer.pcy + (y+1000) * Viewer.grid_size[1]
+        # x2 = Viewer.pcx + (x - Game.player.x) * Viewer.grid_size[0]
+        # y2 = Viewer.pcy + (y - Game.player.y) * Viewer.grid_size[1]
+        x2 = Viewer.pcx + (x + 1000) * Viewer.grid_size[0]
+        y2 = Viewer.pcy + (y + 1000) * Viewer.grid_size[1]
         if center:
             x2 += Viewer.grid_size[0] // 2
             y2 += Viewer.grid_size[1] // 2
-        #print(x2, y2)
+        # print(x2, y2)
         return (x2, y2)
 
     # def load_images(self):
     #     """single images. char looks to the right by default?"""
     # self.images["arch-mage-attack"] = pygame.image.load(
     #    os.path.join("data", "arch-mage-attack.png")).convert_alpha()
-    
+
     def make_background(self):
         """scans the subfolder 'data' for .jpg files, randomly selects
         one of those as background image. If no files are found, makes a
@@ -601,7 +629,7 @@ class Viewer():
 
     def move_cursor_to(self, x, y):
         """moves the cursor to tiles xy, """
-        
+
         x = self.pcx + x * self.grid_size[0]
         y = self.pcy + y * self.grid_size[1]
         if x < 0 or y < 0 or x > (self.width - self.panel_width) or y > (self.height - self.log_height):
@@ -612,7 +640,7 @@ class Viewer():
         self.cursor_x = x
         self.cursor_y = y
         # self.screen.blit(self.background, (0, 0))
-   
+
     def tile_blit(self, surface, x_pos, y_pos, corr_x=0, corr_y=0):
         """correctly blits a surface at tile-position x,y, so that the player is always centered at pcx, pcy"""
         x = (x_pos - self.game.player.x) * self.grid_size[0] + self.pcx + corr_x
@@ -625,31 +653,44 @@ class Viewer():
 
         self.screen.blit(surface, (x, y))
 
-    def draw_grid(self, color=(200,200,200)):
+    def draw_grid(self, color=(200, 200, 200)):
         """draws lines according to Viewer.grid_size"""
         for y in range(0, Viewer.height, Viewer.grid_size[1]):
-            pygame.draw.line(self.screen, color, (0,y), (Viewer.width - Viewer.panel_width,y), 1)
+            pygame.draw.line(self.screen, color, (0, y), (Viewer.width - Viewer.panel_width, y), 1)
         for x in range(0, Viewer.width - Viewer.panel_width, Viewer.grid_size[0]):
-            pygame.draw.line(self.screen, color, (x,0),(x, Viewer.height),1)
+            pygame.draw.line(self.screen, color, (x, 0), (x, Viewer.height), 1)
+
+    def draw_map_tiles(self):
+        # blit (the visible tile of) self.map on the screen
+        legend = {"." : (32,32,32),
+                  "a" : (128,255,0),
+                  "b" : (128,0,255),
+                  "c" : (0,255,255)
+                  }
+        for y, line in enumerate(self.map):
+            for x, char in enumerate(line):
+                #print("legend:", self.map[y][x])
+                pygame.draw.rect(self.screen, legend[self.map[y][x]],(x*Viewer.grid_size[0], y*Viewer.grid_size[1],
+                                  Viewer.grid_size[0],Viewer.grid_size[1]) )
 
     def run(self):
         """The mainloop"""
         running = True
         pygame.mouse.set_visible(True)
         oldleft, oldmiddle, oldright = False, False, False
-        
+
         self.redraw = True
         # exittime = 0
         self.spriteless_background = pygame.Surface((Viewer.width - Viewer.panel_width, Viewer.height))
-        
+
         self.screen.blit(self.spriteless_background, (0, 0))
         ###    pygame.display.flip()
-        #log_lines = len(Game.log)
+        # log_lines = len(Game.log)
         while running:
-            
+
             milliseconds = self.clock.tick(self.fps)  #
             seconds = milliseconds / 1000
-            
+
             self.playtime += seconds
 
             # ------ mouse handler ------
@@ -685,51 +726,53 @@ class Viewer():
                         self.cursor.pos.y -= self.grid_size[1]
                     if event.key == pygame.K_s:
                         self.cursor.pos.y += self.grid_size[1]
-                        #self.redraw = True
+                        # self.redraw = True
                     #    reset_cursor = False
-                        # Game.cursor_x -= 1
-                 
+                    # Game.cursor_x -= 1
+
                     # ----------- magic with ctrl key and dynamic key -----
                     # if pressed_keys[pygame.K_RCTRL] or pressed_keys[pygame.K_LCTRL]:
-                    #if event.mod & pygame.KMOD_CTRL:  # any or both ctrl keys are pressed
-                    
+                    # if event.mod & pygame.KMOD_CTRL:  # any or both ctrl keys are pressed
+
                     #    key = pygame.key.name(event.key)  # name of event key: a, b, c etc.
-                     
+
             # --- set cursor to mouse if inside play area -----
             mousepos = pygame.mouse.get_pos()
             if mousepos[0] < Viewer.width - Viewer.panel_width:
                 x, y = self.pixel_to_tile(pygame.mouse.get_pos())
-                print(x,y)
-                self.cursor.pos = pygame.math.Vector2(x*Viewer.grid_size[0] + Viewer.grid_size[0]//2,
-                                                      y*Viewer.grid_size[1] + Viewer.grid_size[1]//2)
-            #self.move_cursor_to(x, y)  # only moves if on valid tile
+                print(x, y)
+                self.cursor.pos = pygame.math.Vector2(x * Viewer.grid_size[0] + Viewer.grid_size[0] // 2,
+                                                      y * Viewer.grid_size[1] + Viewer.grid_size[1] // 2)
+            # self.move_cursor_to(x, y)  # only moves if on valid tile
 
             # ============== draw screen =================
             # screen_without_sprites = self.screen.copy()
             # self.allgroup.clear(bgd=self.screen)
 
             # self.allgroup.clear(self.screen, self.spriteless_background)
-            #self.screen.blit(self.spriteless_background,
+            # self.screen.blit(self.spriteless_background,
             #                 (0, 0))  # NOTICE: out-comment this line for very cool effect at goldexplosion
-            
+
             self.screen.blit(self.background, (0, 0))
+
+            self.draw_map_tiles()
             self.draw_grid()
             self.allgroup.update(seconds)
             # ------ Cursor -----
-            #self.cursor.pos = pygame.math.Vector2(self.tile_to_pixel((self.cursor_x, self.cursor_y), center=True))
+            # self.cursor.pos = pygame.math.Vector2(self.tile_to_pixel((self.cursor_x, self.cursor_y), center=True))
             self.allgroup.draw(self.screen)
-            
-            #dirtyrects = []
+
+            # dirtyrects = []
 
             self.draw_panel()  # always draw panel #unter allgropu draw: münzen unsichtbar, flackert
-            #dirtyrects.append(pygame.Rect(Viewer.width - Viewer.panel_width, 0, Viewer.panel_width, Viewer.height))
-            
+            # dirtyrects.append(pygame.Rect(Viewer.width - Viewer.panel_width, 0, Viewer.panel_width, Viewer.height))
+
             # write text below sprites
             fps_text = "FPS: {:5.3}".format(self.clock.get_fps())
             pygame.draw.rect(self.screen, (64, 255, 64), (Viewer.width - 110, Viewer.height - 20, 110, 20))
             write(self.screen, text=fps_text, origin="bottomright", x=Viewer.width - 2, y=Viewer.height - 2,
                   font_size=16, bold=True, color=(0, 0, 0))
-            
+
             # self.cursor.pos += pygame.math.Vector2(Viewer.grid_size[0]//2, Viewer.grid_size[1]//2) # center on tile
             # -------- next frame -------------
             # print(dirtyrects)
@@ -738,7 +781,8 @@ class Viewer():
         # -----------------------------------------------------
         pygame.mouse.set_visible(True)
         pygame.quit()
-     
+
+
 if __name__ == '__main__':
-    #g = Game(tiles_x=80, tiles_y=40)
+    # g = Game(tiles_x=80, tiles_y=40)
     Viewer(width=1168, height=768, grid_size=(64, 64))  # , (35,35))
