@@ -517,14 +517,14 @@ class Viewer():
             j.init()
         # ------ create bitmaps for player and dungeon tiles ----
         self.prepare_spritegroups()
-        self.cursor = CursorSprite(pos=pygame.math.Vector2(x=Viewer.pcx, y=Viewer.pcy))
+        self.cursor = CursorSprite(pos=pygame.math.Vector2(Viewer.grid_size[0]//2,Viewer.grid_size[1]//2)) #  pos=pygame.math.Vector2(x=Viewer.pcx, y=Viewer.pcy))
         self.run()
 
     def prepare_spritegroups(self):
         self.allgroup = pygame.sprite.LayeredUpdates()  # for drawing
         self.whole_screen_group = pygame.sprite.Group()
         self.flytextgroup = pygame.sprite.Group()
-        # self.cursorgroup = pygame.sprite.Group()
+        self.cursorgroup = pygame.sprite.Group()
 
         VectorSprite.groups = self.allgroup
         Flytext.groups = self.allgroup, self.flytextgroup
@@ -546,7 +546,7 @@ class Viewer():
         
         
         # blit panelscreen
-        self.screen.blit(self.panelscreen, (Viewer.width - self.panel_width, self.panel_width))
+        self.screen.blit(self.panelscreen, (Viewer.width - self.panel_width, 0))
 
     @staticmethod
     def tile_to_pixel(pos, center=False):
@@ -665,11 +665,17 @@ class Viewer():
                     if event.key == pygame.K_ESCAPE:
                         running = False
                     # ---- move the game cursor with wasd ----
-                    # if event.key == pygame.K_a:
-                    #    self.move_cursor(-1, 0)
-                    #    self.redraw = True
+                    if event.key == pygame.K_a:
+                        self.cursor.pos.x -= self.grid_size[0]
+                    if event.key == pygame.K_d:
+                        self.cursor.pos.x += self.grid_size[0]
+                    if event.key == pygame.K_w:
+                        self.cursor.pos.y -= self.grid_size[1]
+                    if event.key == pygame.K_s:
+                        self.cursor.pos.y += self.grid_size[1]
+                        #self.redraw = True
                     #    reset_cursor = False
-                    #    # Game.cursor_x -= 1
+                        # Game.cursor_x -= 1
                  
                     # ----------- magic with ctrl key and dynamic key -----
                     # if pressed_keys[pygame.K_RCTRL] or pressed_keys[pygame.K_LCTRL]:
@@ -679,7 +685,7 @@ class Viewer():
                      
             # --- set cursor to mouse if inside play area -----
             x, y = self.pixel_to_tile(pygame.mouse.get_pos())
-            self.move_cursor_to(x, y)  # only moves if on valid tile
+            #self.move_cursor_to(x, y)  # only moves if on valid tile
 
             # ============== draw screen =================
             # screen_without_sprites = self.screen.copy()
@@ -692,7 +698,7 @@ class Viewer():
             self.screen.blit(self.background, (0, 0))
             self.allgroup.update(seconds)
             # ------ Cursor -----
-            self.cursor.pos = pygame.math.Vector2(self.tile_to_pixel((self.cursor_x, self.cursor_y), center=True))
+            #self.cursor.pos = pygame.math.Vector2(self.tile_to_pixel((self.cursor_x, self.cursor_y), center=True))
             self.allgroup.draw(self.screen)
             
             #dirtyrects = []
