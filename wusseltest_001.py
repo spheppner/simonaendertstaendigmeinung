@@ -625,6 +625,13 @@ class Viewer():
 
         self.screen.blit(surface, (x, y))
 
+    def draw_grid(self, color=(200,200,200)):
+        """draws lines according to Viewer.grid_size"""
+        for y in range(0, Viewer.height, Viewer.grid_size[1]):
+            pygame.draw.line(self.screen, color, (0,y), (Viewer.width - Viewer.panel_width,y), 1)
+        for x in range(0, Viewer.width - Viewer.panel_width, Viewer.grid_size[0]):
+            pygame.draw.line(self.screen, color, (x,0),(x, Viewer.height),1)
+
     def run(self):
         """The mainloop"""
         running = True
@@ -706,6 +713,7 @@ class Viewer():
             #                 (0, 0))  # NOTICE: out-comment this line for very cool effect at goldexplosion
             
             self.screen.blit(self.background, (0, 0))
+            self.draw_grid()
             self.allgroup.update(seconds)
             # ------ Cursor -----
             #self.cursor.pos = pygame.math.Vector2(self.tile_to_pixel((self.cursor_x, self.cursor_y), center=True))
@@ -733,4 +741,4 @@ class Viewer():
      
 if __name__ == '__main__':
     #g = Game(tiles_x=80, tiles_y=40)
-    Viewer(width=1200, height=800, grid_size=(32, 32))  # , (35,35))
+    Viewer(width=1200, height=800, grid_size=(64, 64))  # , (35,35))
