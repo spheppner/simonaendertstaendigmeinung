@@ -531,10 +531,11 @@ class Viewer():
         CursorSprite.groups = self.allgroup
 
     def pixel_to_tile(self, pixelcoordinate):
-        """transform pixelcoordinate (x,y, from pygame mouse).
-           returns  distance to player tile in tiles (relative coordinates)"""
+        """transform pixelcoordinate (x,y, from pygame mouse) into grid tile coordinate."""
+        #   returns  distance to player tile in tiles (relative coordinates)"""
         x, y = pixelcoordinate
-        return (x - self.pcx) // Viewer.grid_size[0], (y - self.pcy) // Viewer.grid_size[1]
+        #return (x - self.pcx) // Viewer.grid_size[0], (y - self.pcy) // Viewer.grid_size[1]
+        return x // Viewer.grid_size[0], y // Viewer.grid_size[1]
         
     def draw_panel(self):
         self.panelscreen.blit(self.panelscreen0, (0, 0))
@@ -565,7 +566,7 @@ class Viewer():
         if center:
             x2 += Viewer.grid_size[0] // 2
             y2 += Viewer.grid_size[1] // 2
-        print(x2, y2)
+        #print(x2, y2)
         return (x2, y2)
 
     # def load_images(self):
@@ -688,7 +689,12 @@ class Viewer():
                     #    key = pygame.key.name(event.key)  # name of event key: a, b, c etc.
                      
             # --- set cursor to mouse if inside play area -----
-            x, y = self.pixel_to_tile(pygame.mouse.get_pos())
+            mousepos = pygame.mouse.get_pos()
+            if mousepos[0] < Viewer.width - Viewer.panel_width:
+                x, y = self.pixel_to_tile(pygame.mouse.get_pos())
+                print(x,y)
+                self.cursor.pos = pygame.math.Vector2(x*Viewer.grid_size[0] + Viewer.grid_size[0]//2,
+                                                      y*Viewer.grid_size[1] + Viewer.grid_size[1]//2)
             #self.move_cursor_to(x, y)  # only moves if on valid tile
 
             # ============== draw screen =================
