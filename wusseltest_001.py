@@ -532,9 +532,14 @@ class Viewer():
         self.prepare_spritegroups()
         self.cursor = CursorSprite(pos=pygame.math.Vector2(Viewer.grid_size[0] // 2, Viewer.grid_size[
             1] // 2))  # pos=pygame.math.Vector2(x=Viewer.pcx, y=Viewer.pcy))
+        self.load_map_tiles()
         self.create_map()
         self.run()
 
+    def load_map_tiles(self):
+        """load maptiles from files"""
+        self.house001 = pygame.image.load(os.path.join("data", "haus64_001.png"))
+        self.house001.convert_alpha() # to be sure of transparency
 
     def create_map(self, xtiles= 40, ytiles= 40):
         """creates a 2d array to be later represented by graphical tiles.
@@ -618,7 +623,7 @@ class Viewer():
         except:
             print("no folder 'data' or no jpg files in it")
             self.background = pygame.Surface(self.screen.get_size()).convert()
-            self.background.fill((0, 0, 0))  # fill background #
+            self.background.fill((255, 255, 255))  # fill background #
             # TODO: background füllen mit logscreen/panelscreen farbe
 
         self.background = pygame.transform.scale(self.background,
@@ -671,11 +676,16 @@ class Viewer():
         for y, line in enumerate(self.map):
             for x, char in enumerate(line):
                 #print("legend:", self.map[y][x])
-                pygame.draw.rect(self.screen, legend[self.map[y][x]],
-                    ((x-Viewer.viewport[0])  * Viewer.grid_size[0],
-                     (y-Viewer.viewport[1]) * Viewer.grid_size[1],
-                     Viewer.grid_size[0],
-                     Viewer.grid_size[1]) )
+                px = (x-Viewer.viewport[0])  * Viewer.grid_size[0]
+                py = (y-Viewer.viewport[1]) * Viewer.grid_size[1]
+
+                if char == "c":
+                    # make a green grass ground below the house, because house has transpacrencey
+                    pygame.draw.rect(self.screen, (0,200,0),
+                                     (px, py, Viewer.grid_size[0], Viewer.grid_size[1]))
+                    self.screen.blit(self.house001, ( px, py))
+                else:
+                    pygame.draw.rect(self.screen, legend[self.map[y][x]],(px, py, Viewer.grid_size[0], Viewer.grid_size[1]))
 
     def run(self):
         """The mainloop"""
