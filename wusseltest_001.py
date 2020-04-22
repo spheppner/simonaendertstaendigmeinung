@@ -538,7 +538,11 @@ class Viewer():
         
     def draw_panel(self):
         self.panelscreen.blit(self.panelscreen0, (0, 0))
-        #write(self.panelscreen, text="dungeon: {}".format(self.game.player.z), x=5, y=5, color=(255, 255, 255))
+        write(self.panelscreen, text="cursor x:{} y:{} (pixel)".format(self.cursor.pos.x, self.cursor.pos.y), x=5, y=5,
+              color=(255, 255, 255), font_size=12)
+        write(self.panelscreen, text="cursor x:{} y:{} (tiles)".format(
+            self.cursor.pos.x // Viewer.grid_size[0], self.cursor.pos.y // Viewer.grid_size[1]), x=5, y=25,
+              color=(255, 255, 255), font_size=12)
         # - hitpoint bar in red, starting left
         #pygame.draw.rect(self.panelscreen, (200, 0, 0),
         #                 (0, 35, self.game.player.hitpoints * Viewer.panel_width / self.game.player.hitpoints_max, 28))
