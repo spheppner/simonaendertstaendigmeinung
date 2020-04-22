@@ -488,6 +488,7 @@ class Viewer():
     panel_width = 208
     log_height = 0
     grid_size = (32, 32)
+    viewport = [0,0] # offset of the topleft corner of the viewport in grid coordinates
     pcx = 0  # player x coordinate in pixel
     pcy = 0  # player y coordinate in pixel
 
@@ -670,8 +671,11 @@ class Viewer():
         for y, line in enumerate(self.map):
             for x, char in enumerate(line):
                 #print("legend:", self.map[y][x])
-                pygame.draw.rect(self.screen, legend[self.map[y][x]],(x*Viewer.grid_size[0], y*Viewer.grid_size[1],
-                                  Viewer.grid_size[0],Viewer.grid_size[1]) )
+                pygame.draw.rect(self.screen, legend[self.map[y][x]],
+                    ((x-Viewer.viewport[0])  * Viewer.grid_size[0],
+                     (y-Viewer.viewport[1]) * Viewer.grid_size[1],
+                     Viewer.grid_size[0],
+                     Viewer.grid_size[1]) )
 
     def run(self):
         """The mainloop"""
@@ -726,6 +730,17 @@ class Viewer():
                         self.cursor.pos.y -= self.grid_size[1]
                     if event.key == pygame.K_s:
                         self.cursor.pos.y += self.grid_size[1]
+                    # ---- move the viewport with cursor keys ----
+                    if event.key == pygame.K_LEFT:
+                        self.viewport[0] -= 1
+                    if event.key == pygame.K_RIGHT:
+                        self.viewport[0] += 1
+                    if event.key == pygame.K_UP:
+                        self.viewport[1] -= 1
+                    if event.key == pygame.K_DOWN:
+                        self.viewport[1] += 1
+
+
                         # self.redraw = True
                     #    reset_cursor = False
                     # Game.cursor_x -= 1
