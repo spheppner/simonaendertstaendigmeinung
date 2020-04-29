@@ -134,7 +134,7 @@ def story():
     feed_list_from_file(World.first_names_male, "male_firstnames.txt")
     feed_list_from_file(World.first_names_female, "female_firstnames.txt")
 
-    for nr in range(2): # 15
+    for nr in range(15): # 15
         x = Person(location = [20,20], min_age=0, max_age=25, year=2000, gender="male" if nr % 2 == 0 else "female")  ## adam und eva *2.5
     print("new settlers arrive in your city!")
 
@@ -148,13 +148,23 @@ def story():
         #for n in [p for p in World.persons.values()]:
         #    if n.update_year is None or n.update_year != year:
         #        n.update(year)
-        print()
-        print("************ year: ******************* ", year)
-        print()
+        print("************ year: {} ************".format(year))
+        print("\n"*10)
         #print(World.location_history)
-        for year in World.location_history:
-            for person in World.location_history[year]:
-                print(year, person, World.location_history[year][person])
+        #for year in World.location_history:
+        #    for person in World.location_history[year]:
+        #        print(year, person, World.location_history[year][person])
+        
+        for y in range(40):
+            for x in range(40):
+                counter = 0
+                for p in World.location_history[year]:
+                    if World.location_history[year][p][0] == x and World.location_history[year][p][1] == y:
+                        counter += 1
+                print("{:>3}".format("." if counter == 0 else counter), end="|")
+            print()
+             
+        
         input("press enter.....")
         #print(year, len([p for p in World.persons.values() if p.death_year is None]), len([p for p in World.persons.values() if p.death_year is None and p.married is not None]))
         #print(World.persons.keys())
@@ -224,10 +234,10 @@ class Person:
         self.update_year = None
 
         parents = self.get_parents()
-        print(parents)
+        #print(parents)
 
         if len(parents) != 2:
-            print("Random Genes: ", end="")
+            #print("Random Genes: ", end="")
             self.genom = create_genes()
         else:
             self.genom = []
@@ -264,8 +274,8 @@ class Person:
                         self.genom.append(World.persons[parents[source]].genom[x])
                 # TODO: all other cases like neutral and good cases
 
-            print("Mixed Genes: ", end="")
-        print(self.genom, "Mittelwert:",(sum(self.genom) / len(self.genom)))
+            #print("Mixed Genes: ", end="")
+        #print(self.genom, "Mittelwert:",(sum(self.genom) / len(self.genom)))
         # moral 0 always does evil things
         # moral 1 never does evil things
         self.moral = sum(self.genom) / len(self.genom)
@@ -305,7 +315,7 @@ class Person:
             # if lonely, return to previous square
             dx, dy = 0,0
             if self.person_count(self.location[0], self.location[1], year-1) >1:
-                print(" --- not lonely, moving away")
+                #print(" --- not lonely, moving away")
                 dx, dy = random.choice(( (1,0), (1,-1), (0,-1),(-1,-1),(-1,0),
                                         (-1,1), (0,1), (1,1)))
                 # make sure he stays inside his 40x40 prison:
@@ -314,7 +324,7 @@ class Person:
                 if self.location[1] + dy < 0 or self.location[1] + dx > 40:
                     dy = 0
             else: # lonely
-                print("loneley, going back home")
+                #print("loneley, going back home")
                 # swap location with old_location
                 self.location, self.old_location = self.old_location, self.location
 
@@ -326,10 +336,10 @@ class Person:
             self.old_location = self.location
 
 
-        print("meine location", self.location)
+        #print("meine location", self.location)
 
         # write world location_history
-        print("location update for", self.number)
+        #print("location update for", self.number)
         self.write_location_history(year)
 
 
