@@ -12,6 +12,8 @@ import os
 #ValueError: list.remove(x): x not in list
 
 class World:
+    location_history = {} # wer ist wann wo
+                     # year: {person_number} : xy
     persons = {}
     first_names_male = []
     first_names_female = []
@@ -132,19 +134,31 @@ def story():
     feed_list_from_file(World.first_names_male, "male_firstnames.txt")
     feed_list_from_file(World.first_names_female, "female_firstnames.txt")
 
-    for nr in range(15):
-        x = Person(min_age=0, max_age=25, year=2000, gender="male" if nr % 2 == 0 else "female")  ## adam und eva *2.5
+    for nr in range(2): # 15
+        x = Person(location = [20,20], min_age=0, max_age=25, year=2000, gender="male" if nr % 2 == 0 else "female")  ## adam und eva *2.5
+    print("new settlers arrive in your city!")
+
+    #print(World.location_history)
+
     for year in range(2000, 2100):
         # for n in World.persons.values()
 
         for n in [p for p in World.persons.values()]:
             n.update(year)
-        for n in [p for p in World.persons.values()]:
-            if n.update_year is None or n.update_year != year:
-                n.update(year)
-        print(year, len([p for p in World.persons.values() if p.death_year is None]), len([p for p in World.persons.values() if p.death_year is None and p.married is not None]))
-        print(World.persons.keys())
-        print(sum([sum(p.genom)/10 for p in World.persons.values() if p.death_year is None])/len([p for p in World.persons.values() if p.death_year is None]))
+        #for n in [p for p in World.persons.values()]:
+        #    if n.update_year is None or n.update_year != year:
+        #        n.update(year)
+        print()
+        print("************ year: ******************* ", year)
+        print()
+        #print(World.location_history)
+        for year in World.location_history:
+            for person in World.location_history[year]:
+                print(year, person, World.location_history[year][person])
+        input("press enter.....")
+        #print(year, len([p for p in World.persons.values() if p.death_year is None]), len([p for p in World.persons.values() if p.death_year is None and p.married is not None]))
+        #print(World.persons.keys())
+        #print(sum([sum(p.genom)/10 for p in World.persons.values() if p.death_year is None])/len([p for p in World.persons.values() if p.death_year is None]))
         #command = input(">>> ")
         #if command == "":
         #    continue
@@ -169,7 +183,7 @@ def story():
 class Person:
     number = 0
 
-    def __init__(self, year, min_age=0, max_age=95, last_name = None, immigrant=True, gender=None):
+    def __init__(self, year, location, min_age=0, max_age=95, last_name = None, immigrant=True, gender=None ):
         """creates a person with full history"""
         self.number = Person.number
         Person.number += 1
@@ -179,7 +193,9 @@ class Person:
         self.gender = random.choice(("male", "female")) if gender is None else gender
         self.first_name = random.choice(World.first_names_male if self.gender == "male" else World.first_names_female)
         self.probability_of_death = 0.0001
-
+        self.location = location # z.b. [20,20]
+        self.write_location_history(year)
+        self.old_location = None
         self.death_year = None
         self.birth_year = year - random.randint(min_age, max_age)
         self.marriage_year = None
@@ -262,6 +278,19 @@ class Person:
     #    # self.get_children()
     #    self.update_year = None
 
+    def write_location_history(self, year):
+        if year not in World.location_history:
+            World.location_history[year] = {}
+        World.location_history[year][self.number] = self.location
+
+    def person_count(self, x, y, year):
+        people_here = 0
+        for p in World.location_history[year]:
+            location =  World.location_history[year][p]
+            if location[0] == x and location[1]==y:
+                people_here += 1
+        return people_here
+
     def update(self, year):
         if self.death_year is not None:
             return
@@ -270,6 +299,41 @@ class Person:
         age = year-self.birth_year
         if age % 8 == 0:
             self.probability_of_death *= 2
+        # ----- chance to wander around -----
+        if age > 10 and year > 2000:
+            # if not lonely in current square, wander away.
+            # if lonely, return to previous square
+            dx, dy = 0,0
+            if self.person_count(self.location[0], self.location[1], year-1) >1:
+                print(" --- not lonely, moving away")
+                dx, dy = random.choice(( (1,0), (1,-1), (0,-1),(-1,-1),(-1,0),
+                                        (-1,1), (0,1), (1,1)))
+                # make sure he stays inside his 40x40 prison:
+                if self.location[0] + dx < 0 or self.location[0] + dx > 40:
+                    dx= 0
+                if self.location[1] + dy < 0 or self.location[1] + dx > 40:
+                    dy = 0
+            else: # lonely
+                print("loneley, going back home")
+                # swap location with old_location
+                self.location, self.old_location = self.old_location, self.location
+
+            # moving to new square:
+            self.old_location = self.location
+            self.location = [self.location[0] + dx, self.location[1] + dy]
+        else:
+            #stay where you are
+            self.old_location = self.location
+
+
+        print("meine location", self.location)
+
+        # write world location_history
+        print("location update for", self.number)
+        self.write_location_history(year)
+
+
+
 
         # ----- trying to marry someone -----
         if self.married is None and age > 16:
@@ -416,7 +480,7 @@ class Person:
             World.persons[self.married].children.append(babynumber)
             self.history.append("{}: Mommy got a baby: {}.".format(year, babynumber))
             World.persons[self.married].history.append("{}: Becomes daddy of: {}.".format(year, babynumber))
-            baby = Person(year, min_age=0, max_age=0, last_name=self.last_name, immigrant=False)
+            baby = Person(year, location=self.location, min_age=0, max_age=0, last_name=self.last_name, immigrant=False)
 
         # if len(self.marriages) == 0:
         #    return
