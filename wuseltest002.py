@@ -506,7 +506,9 @@ class HumanSprite(VectorSprite):
 
     def create_image(self):
         print("ich bin human", self.number)
-        self.image = Viewer.images["human001"]
+        self.image = pygame.surface.Surface((Viewer.grid_size[0], Viewer.grid_size[1]))
+        self.image.set_colorkey((0,0,0))
+        self.image.blit(Viewer.images["human001"], (0,0)) # TODO: wenn image NICHT 64x64, in die Mitte von self.image blitten, aber blit hat als 2. argument topleft corner
         pygame.draw.rect(self.image, (random.randint(0,255), random.randint(0,255), random.randint(0,255)),
                          (0,55,64,14))
         self.image.convert_alpha()
