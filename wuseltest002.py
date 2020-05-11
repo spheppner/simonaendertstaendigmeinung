@@ -5,7 +5,9 @@ Email: simon@heppner.at
 Github: github.com/spheppner
 Version: 002
 
-Leute sollen von start-tile ausgehend herumwuseln, immer wieder zurück kommen, eventuell pärchen bilden und häuser bauen
+# DONE:Leute sollen von start-tile ausgehend herumwuseln, immer wieder zurück kommen, eventuell pärchen bilden und häuser bauen
+TODO: schlafenszeit 8 h / tag, leute sollen zu hause sein.
+
 """
 
 
@@ -267,7 +269,29 @@ class FlyingObject(VectorSprite):
 
         self.set_angle(self.move.angle_to(pygame.math.Vector2(1, 0)))
 
+def tile_to_pixel(pos, center=False):
+        """get a tile coordinate (x,y) and returns pixel (x,y) of tile
+           if center is True, returns the center of the tile,
+           if center is False, returns the upper left corner of the tile"""
+        x, y = pos
+        # x2 = Viewer.pcx + (x - Game.player.x) * Viewer.grid_size[0]
+        # y2 = Viewer.pcy + (y - Game.player.y) * Viewer.grid_size[1]
+        x2 = Viewer.pcx + (x + 1000) * Viewer.grid_size[0]
+        y2 = Viewer.pcy + (y + 1000) * Viewer.grid_size[1]
+        if center:
+            x2 += Viewer.grid_size[0] // 2
+            y2 += Viewer.grid_size[1] // 2
+        # print(x2, y2)
+        return (x2, y2)
 
+
+
+def pixel_to_tile(pixelcoordinate):
+        """transform pixelcoordinate (x,y, from pygame mouse) into grid tile coordinate."""
+        #   returns  distance to player tile in tiles (relative coordinates)"""
+        x, y = pixelcoordinate
+        # return (x - self.pcx) // Viewer.grid_size[0], (y - self.pcy) // Viewer.grid_size[1]
+        return x // Viewer.grid_size[0], y // Viewer.grid_size[1]
 
 def megaroll(dicestring="1d6 1d20", bonus=0):
     """roll all the dice in the dicestring and adds a bonus to the sum
@@ -494,11 +518,16 @@ class HumanSprite(VectorSprite):
         self.hour = 0
         self.dx, self.dy = 0, 0
         self.location_history = [(8,5)]
+        self.home_location = (8,5)
+        self.homeVector = pygame.math.Vector2(8* Viewer.grid_size[0] + Viewer.grid_size[0]//2,5 * Viewer.grid_size[1]+ Viewer.grid_size[1]//2)
+        self.sleep = False
 
     def wander_around(self):
         """go to a nearby location or go home"""
         self.dx = random.randint(-1,1)
         self.dy = random.randint(-1,1)
+        if self.sleep:
+            self.dx, self.dy = 0, 0
         #self.location[0] += self.dx
         #self.location[1] += self.dy
         self.location = ( self.location[0] + self.dx, self.location[1] + self.dy)
@@ -514,9 +543,28 @@ class HumanSprite(VectorSprite):
         self.image.convert_alpha()
         self.rect = self.image.get_rect()
 
+    def update(self, seconds):
+        super().update( seconds)
+        print(self.homeVector, self.pos)
+        if self.sleep and (self.homeVector[0] != int(self.pos[0]) and (self.homeVector[1] != int(self.pos[1]))):
+            print("i go home to sleep")
+            self.move = self.homeVector - self.pos
+            if self.move.length() != 0:
+                self.move.normalize_ip() # 1
+            self.move *= 40 # pixel / sec
+            self.location = pixel_to_tile((self.pos[0], self.pos[1]))
+            #print("i am now at location", self.location, "my home is at", self.home_location)
+        else:
+            self.move = pygame.math.Vector2(0,0)
+
 
     def hour_update(self, hour):
         print(hour, "davor loc", self.location, "and loc_history:",  self.location_history)
+        if self.hour % 24 > 22 or self.hour % 24 < 6:
+            self.sleep = True
+        else:
+            self.sleep = False
+        print(self.hour, self.sleep)
         try:
             self.location = self.location_history[hour]
             print("hour found")
@@ -526,11 +574,22 @@ class HumanSprite(VectorSprite):
             self.wander_around() # updating loc
         # move sprite to loc
         self.hour = hour
+        # sleeping time ?
+
+
+
         x, y = self.location[0], self.location[1]
         print("hour", hour, "teleporting to", x,y )
         self.pos = pygame.math.Vector2(  x* Viewer.grid_size[0] + Viewer.grid_size[0]//2,
                                          y * Viewer.grid_size[1]+ Viewer.grid_size[1]//2)
-        print(hour ,"danach loc ", self.location, "and loc_history:", self.location_history)
+        #print(hour ,"danach loc ", self.location, "and loc_history:", self.location_history)
+        # testing if want to be home but not yet home
+        print("sleep", self.sleep)
+        #if self.sleep and self.pos[0] != self.home_location[0] and self.pos[1] != self.home_location[1]:
+        #    print("i want to go home!")
+            #self.move = pygame.math.Vector2(self.pos[0]-self.home_location[0], self.pos[1]-self.home_location[1])
+            #self.move.normalize_ip() # 1
+            #self.move *= 20 # pixel / sec
 
 
 
@@ -641,12 +700,7 @@ class Viewer():
         CursorSprite.groups = self.allgroup
         HumanSprite.groups = self.allgroup, self.humangroup
 
-    def pixel_to_tile(self, pixelcoordinate):
-        """transform pixelcoordinate (x,y, from pygame mouse) into grid tile coordinate."""
-        #   returns  distance to player tile in tiles (relative coordinates)"""
-        x, y = pixelcoordinate
-        # return (x - self.pcx) // Viewer.grid_size[0], (y - self.pcy) // Viewer.grid_size[1]
-        return x // Viewer.grid_size[0], y // Viewer.grid_size[1]
+
 
     def draw_panel(self):
         self.panelscreen.blit(self.panelscreen0, (0, 0))
@@ -664,21 +718,7 @@ class Viewer():
         # blit panelscreen
         self.screen.blit(self.panelscreen, (Viewer.width - self.panel_width, 0))
 
-    @staticmethod
-    def tile_to_pixel(pos, center=False):
-        """get a tile coordinate (x,y) and returns pixel (x,y) of tile
-           if center is True, returns the center of the tile,
-           if center is False, returns the upper left corner of the tile"""
-        x, y = pos
-        # x2 = Viewer.pcx + (x - Game.player.x) * Viewer.grid_size[0]
-        # y2 = Viewer.pcy + (y - Game.player.y) * Viewer.grid_size[1]
-        x2 = Viewer.pcx + (x + 1000) * Viewer.grid_size[0]
-        y2 = Viewer.pcy + (y + 1000) * Viewer.grid_size[1]
-        if center:
-            x2 += Viewer.grid_size[0] // 2
-            y2 += Viewer.grid_size[1] // 2
-        # print(x2, y2)
-        return (x2, y2)
+    #@staticmethod
 
     # def load_images(self):
     #     """single images. char looks to the right by default?"""
@@ -853,7 +893,7 @@ class Viewer():
             # --- set cursor to mouse if inside play area -----
             mousepos = pygame.mouse.get_pos()
             if mousepos[0] < Viewer.width - Viewer.panel_width:
-                x, y = self.pixel_to_tile(pygame.mouse.get_pos())
+                x, y = pixel_to_tile(pygame.mouse.get_pos())
                 #print(x, y)
                 self.cursor.pos = pygame.math.Vector2(x * Viewer.grid_size[0] + Viewer.grid_size[0] // 2,
                                                       y * Viewer.grid_size[1] + Viewer.grid_size[1] // 2)
