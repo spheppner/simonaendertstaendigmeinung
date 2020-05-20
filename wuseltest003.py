@@ -5,7 +5,7 @@ Email: simon@heppner.at
 Github: github.com/spheppner
 Version: 002
 
-TODO: Alles Zeitbasiert (Zeitleiste mit allen Aktionen temporär speichern)
+TODO: Häuser bauen
 
 """
 
@@ -553,7 +553,6 @@ class Person(VectorSprite):
     def update(self, seconds):
         super().update(seconds)
         if self.sleep and (self.homeVector[0] != int(self.pos[0]) or (self.homeVector[1] != int(self.pos[1]))):
-            print("i go home to sleep")
             self.move = self.homeVector - self.pos
             if self.move.length() != 0:
                 self.move.normalize_ip() # 1
@@ -564,13 +563,22 @@ class Person(VectorSprite):
             self.move = pygame.math.Vector2(0,0)
     
     def hour_update2(self, hour):
-        if hour < LogBook.max_hour: 
+        if hour <= LogBook.max_hour: 
             # ----- Zurückreisen in der Zeit -----
             for k in LogBook.log[hour][self.number].keys():
                 self.__dict__[k] = LogBook.log[hour][self.number][k]
-                
             
+            # ----- Married ? -----
+            if self.married and not LogBook.log[hour-1][self.number]["married"]:
+                Flytext("MARRRIEDDD",  pos = pygame.math.Vector2(self.pos[0], self.pos[1]-100),
+                                       move = pygame.math.Vector2(0, 20), max_age = 5)
+            
+            # ----- position updaten -----
+            self.pos = pygame.math.Vector2(self.location[0]* Viewer.grid_size[0] + Viewer.grid_size[0]//2, 
+                                           self.location[1] * Viewer.grid_size[1]+ Viewer.grid_size[1]//2)
+
         else: # ----- Neue Zeit schreiben -----
+            
             # ----- Schlafenszeit -----
             if hour % 24 > 22 or hour % 24 < 6:
                 self.sleep = True
@@ -579,14 +587,30 @@ class Person(VectorSprite):
                 # ----- herumlaufen ----- 
                 self.wander_around()
             
+            # ----- Heirat -----
+            if self.sleep: 
+                if random.random() < 0.1 and self.married is None:
+                    candidates = [c for c in VectorSprite.numbers.values() if isinstance(c, Person) and c.number != self.number and c.years_old > 18 and c.gender != self.gender]
+                    if len(candidates) > 0:
+                        partner = random.choice(candidates)
+                        self.married = partner.number
+                        VectorSprite.numbers[partner.number].married = self.number
+                        Flytext("MARRRIEDDD",  pos = pygame.math.Vector2(self.pos[0], self.pos[1]),
+                                               move = pygame.math.Vector2(0, -20), max_age = 5)
+            
+            
+            # ----- position updaten -----
+            self.pos = pygame.math.Vector2(self.location[0]* Viewer.grid_size[0] + Viewer.grid_size[0]//2, 
+                                           self.location[1] * Viewer.grid_size[1]+ Viewer.grid_size[1]//2)
+            
+            # ----- LogBuch max_time updaten -----
+            # in Viewer.run
+                                       
             # ----- Logbuch updaten -----
             if hour not in LogBook.log:
                 LogBook.log[hour] = {}
-            LogBook.log[hour][self.number] = self.__dict__.copy()
-            
-        # ----- position updaten -----
-        self.pos = pygame.math.Vector2(self.location[0]* Viewer.grid_size[0] + Viewer.grid_size[0]//2, 
-                                       self.location[1] * Viewer.grid_size[1]+ Viewer.grid_size[1]//2)
+            #LogBook.log[hour][self.number] = self.__dict__.copy()
+            LogBook.log[hour][self.number] = {"location": self.location, "sleep": self.sleep, "married": self.married}
 
     def hour_update(self, hour):
         print(hour, "davor loc", self.location, "and loc_history:",  self.location_history)
@@ -675,7 +699,7 @@ class Viewer():
         self.load_map_tiles()
         self.load_sprites()
         self.create_map()
-        for person in range(1):
+        for person in range(2):
             #print("pos:", self.tile_to_pixel((8* Viewer.grid_size[0],5 * Viewer.grid_size[1])))
             gender = "female" if person % 2 == 0 else "male"
             Person(pos=pygame.math.Vector2(8* Viewer.grid_size[0] + Viewer.grid_size[0]//2,5 * Viewer.grid_size[1]+ Viewer.grid_size[1]//2), gender = gender, years_old = 19)
@@ -874,13 +898,15 @@ class Viewer():
                         Viewer.hour += 1
                         for human in self.humangroup:
                             human.hour_update2(Viewer.hour)
-                        print(LogBook.log)
+                        if Viewer.hour > LogBook.max_hour:
+                            LogBook.max_hour = Viewer.hour
+                        print(Viewer.hour, LogBook.log[Viewer.hour], LogBook.max_hour)
                     if event.key == pygame.K_l:
-                        if Viewer.hour > 0:
+                        if Viewer.hour > 1:
                             Viewer.hour -= 1
                             for human in self.humangroup:
                                 human.hour_update2(Viewer.hour)
-                            print(LogBook.log)
+                            print(Viewer.hour, LogBook.log[Viewer.hour], LogBook.max_hour)
 
 
                     # ---- move the game cursor with wasd ----
