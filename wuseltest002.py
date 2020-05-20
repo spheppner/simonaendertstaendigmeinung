@@ -546,7 +546,7 @@ class HumanSprite(VectorSprite):
     def update(self, seconds):
         super().update( seconds)
         print(self.homeVector, self.pos)
-        if self.sleep and (self.homeVector[0] != int(self.pos[0]) and (self.homeVector[1] != int(self.pos[1]))):
+        if self.sleep and (self.homeVector[0] != int(self.pos[0]) or (self.homeVector[1] != int(self.pos[1]))):
             print("i go home to sleep")
             self.move = self.homeVector - self.pos
             if self.move.length() != 0:
@@ -654,7 +654,7 @@ class Viewer():
         self.load_map_tiles()
         self.load_sprites()
         self.create_map()
-        for person in range(15):
+        for person in range(4):
             #print("pos:", self.tile_to_pixel((8* Viewer.grid_size[0],5 * Viewer.grid_size[1])))
 
             HumanSprite(pos=pygame.math.Vector2(8* Viewer.grid_size[0] + Viewer.grid_size[0]//2,5 * Viewer.grid_size[1]+ Viewer.grid_size[1]//2))
